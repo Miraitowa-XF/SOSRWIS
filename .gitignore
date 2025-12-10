@@ -1,0 +1,47 @@
+# ===========================
+# 1. 忽略构建目录和临时文件
+# ===========================
+out/
+build/
+bin/
+lib/
+# 注意：这里忽略根目录下的 lib/ 文件夹(如果有的话)，
+# 但不忽略 third_party 下的 lib (因为我们需要上传库文件)
+!third_party/**/lib/
+
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+install_manifest.txt
+Makefile
+
+# ===========================
+# 2. 忽略 Visual Studio 工程文件
+# (CMake 会自动生成这些，不需要上传)
+# ===========================
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+
+# ===========================
+# 3. 忽略可执行文件和编译产物
+# ===========================
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.dll
+# 特例：如果有第三方 DLL 需要随库上传（比如 assimp 的 dll），可以用 ! 排除
+!third_party/**/*.dll
+
+# ===========================
+# 4. 系统垃圾文件
+# ===========================
+.DS_Store
+Thumbs.db

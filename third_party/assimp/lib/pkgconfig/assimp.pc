@@ -1,0 +1,9 @@
+libdir=F:/OpenGL_project/OpenGL_lib/assimp_compiled/lib
+includedir=F:/OpenGL_project/OpenGL_lib/assimp_compiled/include
+
+Name: Assimp
+Description: Import various well-known 3D model formats in an uniform manner.
+Version: 6.0.2
+Libs: -L${libdir} -lassimp
+Libs.private:  
+Cflags: -I${includedir}
