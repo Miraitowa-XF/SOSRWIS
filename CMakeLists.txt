@@ -109,3 +109,38 @@ target_include_directories(glMain PRIVATE
     ${STB_INCLUDE_DIR}    
     ${ASSIMP_INCLUDE_DIR} 
 )
+
+
+
+# ==========================================
+#  配置测试程序 (Test Executable)
+# ==========================================
+add_executable(glTest test.cpp)
+
+# ==========================================
+# 链接库 (Linking)
+# ==========================================
+# 链接顺序：
+# 1. CoreLib (src下的代码)
+# 2. glad (刚才定义的库)
+# 3. GLFW (导入的库)
+# 4. opengl32 (Windows 系统自带库，必须链接)
+target_link_libraries(glTest  
+    PRIVATE 
+    CoreLib 
+    glad 
+    imgui
+    ${GLFW_LIB}
+    debug ${ASSIMP_LIB_DBG}       # Debug 模式用这个
+    optimized ${ASSIMP_LIB_REL}   # Release 模式用这个
+    ${ZLIB_LIB}   # 【新增】Assimp 的跟班 Zlib
+    opengl32 
+)
+
+# 统一包含路径 (让 main.cpp 能找到所有头文件)
+target_include_directories(glTest PRIVATE 
+    ${GLFW_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}    
+    ${STB_INCLUDE_DIR}    
+    ${ASSIMP_INCLUDE_DIR} 
+)
