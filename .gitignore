@@ -45,3 +45,7 @@ Makefile
 # ===========================
 .DS_Store
 Thumbs.db
+
+# 允许上传 assets 文件夹下的所有 .obj 模型文件
+!assets/**/*.obj
+!assets/**/*.mtl
