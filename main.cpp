@@ -8,6 +8,7 @@
 #include "Core/Shader.h"
 #include "Core/Camera.h"
 #include "Renderer/Model.h" // <--- 【新增】引入模型类
+#include "Renderer/Skybox.h"
 
 #include <iostream>
 #include "stb_image.h"
@@ -59,6 +60,20 @@ int main()
     // 2. 编译 Shader (不变)
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 
+
+    std::vector<std::string> faces
+    {
+        "assets/textures/skybox/right.jpg",
+        "assets/textures/skybox/left.jpg",
+        "assets/textures/skybox/top.jpg",
+        "assets/textures/skybox/bottom.jpg",
+        "assets/textures/skybox/front.jpg",
+        "assets/textures/skybox/back.jpg"
+    };
+
+    // 【新增】创建 Skybox 对象
+    Skybox* skybox = new Skybox(faces);
+
     // 3. 【新增】加载模型
     // 这一步替代了之前“定义立方体 vertices 数组”和“配置 VAO/VBO”的过程
     // 记得在 main 函数里设置一下 stb_image 的翻转
@@ -76,36 +91,50 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // 【保留】输入处理
+        // 处理输入
         processInput(window);
 
+        // *** 新增：每帧更新相机（把鼠标目标角度应用并平滑） ***
+        camera.Update(deltaTime);
+
+        //// 可选：当你觉得响应迟钝时，短时提高速度
+        camera.RotationSmoothSpeed = 15.0f;
+        camera.MouseSensitivity = 0.8f;
+
+        // 清屏
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ourShader.use();
 
-        // 【保留】设置光照和相机矩阵
+        // 设置光照和相机矩阵
         ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f)); // 把光稍微太高一点
+        ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));
         ourShader.setVec3("viewPos", camera.Position);
 
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+            (float)SCR_WIDTH / (float)SCR_HEIGHT,
+            0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
+
+        // 这里 GetViewMatrix() 假定 Update 已经被调用过
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        // 【新增】绘制模型
+        // 绘制模型
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f)); // 向下挪一点
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));      // 【重要】把模型缩放小一点，防止太大看不到
+        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f));
         ourShader.setMat4("model", model);
-
-        // 以前是 glDrawArrays，现在变成调用 Model 类的 Draw 方法
         houseModel.Draw(ourShader);
+
+        // 绘制天空盒（注意：Skybox::Draw 使用的是没有平移的 view）
+        skybox->Draw(view, projection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
 
     glfwTerminate();
     return 0;
@@ -137,11 +166,34 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
-    if (firstMouse) { lastX = xpos; lastY = ypos; firstMouse = false; }
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos; lastY = ypos;
-    camera.ProcessMouseMovement(xoffset, yoffset);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+        return;
+    }
+
+    // 原始像素偏移
+    float xoffset_px = xpos - lastX;
+    float yoffset_px = lastY - ypos; // 注意 y 方向取反
+
+    lastX = xpos;
+    lastY = ypos;
+
+    // 归一化到 [-1, 1]，按窗口尺寸（使用 framebuffer 大小会更稳）
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    float nx = xoffset_px / (float)fbWidth;   // -1 .. 1 (approx)
+    float ny = yoffset_px / (float)fbHeight;  // -1 .. 1 (approx)
+
+    // 可选诊断：取消注释以观察数值（短期）
+    // static float acc=0; acc += 1.0f; if(acc>30){ acc=0; printf("px=(%.1f,%.1f) norm=(%.4f,%.4f)\n", xoffset_px, yoffset_px, nx, ny); }
+
+    // 将归一化位移传递给 Camera；Camera 内部将把它映射为角度
+    // 这里传入归一化值而不是像素
+    camera.ProcessMouseMovementNormalized(nx, ny);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
