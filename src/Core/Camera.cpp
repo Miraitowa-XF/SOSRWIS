@@ -69,21 +69,33 @@ glm::mat4 Camera::GetViewMatrix() const
 // ---------------------- 键盘移动 ----------------------
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
-    if (deltaTime <= 0.0f) return;
-
     float velocity = MovementSpeed * deltaTime;
-    if (direction == FORWARD)
-        Position += Front * velocity;
-    if (direction == BACKWARD)
-        Position -= Front * velocity;
-    if (direction == LEFT)
-        Position -= Right * velocity;
-    if (direction == RIGHT)
-        Position += Right * velocity;
-    if (direction == UP)
-        Position += WorldUp * velocity;
-    if (direction == DOWN)
-        Position -= WorldUp * velocity;
+
+    if (FPS_Mode)
+    {
+        // FPS 模式：只能在 XZ 平面上移动
+        if (direction == FORWARD)
+            Position += glm::normalize(glm::vec3(Front.x, 0.0f, Front.z)) * velocity;
+        if (direction == BACKWARD)
+            Position -= glm::normalize(glm::vec3(Front.x, 0.0f, Front.z)) * velocity;
+        if (direction == LEFT)
+            Position -= glm::normalize(glm::vec3(Right.x, 0.0f, Right.z)) * velocity;
+        if (direction == RIGHT)
+            Position += glm::normalize(glm::vec3(Right.x, 0.0f, Right.z)) * velocity;
+
+        // 强制锁定高度 (模拟重力)
+        Position.y = GroundHeight;
+    }
+    else
+    {
+        // 上帝模式：自由飞翔 (原代码)
+        if (direction == FORWARD) Position += Front * velocity;
+        if (direction == BACKWARD) Position -= Front * velocity;
+        if (direction == LEFT) Position -= Right * velocity;
+        if (direction == RIGHT) Position += Right * velocity;
+        if (direction == UP) Position += WorldUp * velocity;
+        if (direction == DOWN) Position -= WorldUp * velocity;
+    }
 }
 
 // ---------------------- 鼠标移动 ----------------------

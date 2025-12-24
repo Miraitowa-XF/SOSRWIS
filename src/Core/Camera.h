@@ -63,6 +63,9 @@ public:
     float RotationSmoothSpeed; // 角度平滑速度（单位：1/秒）
     float ZoomSmoothSpeed;     // 缩放平滑速度（单位：1/秒）
 
+    bool FPS_Mode = false; // 默认关闭，按键开启
+    float GroundHeight = 1.7f; // 人的眼睛高度
+
 public:
     // 构造函数
     Camera(

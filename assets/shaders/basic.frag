@@ -33,10 +33,10 @@ void main()
     vec3 specular = specularStrength * spec * lightColor;  
     
     // 4. 采样纹理颜色
-    // vec3 objectColor = texture(texture_diffuse1, TexCoords).rgb;
+    vec3 objectColor = texture(texture_diffuse1, TexCoords).rgb;
 
     // 【修改后】强制使用一个灰白色 (先让模型显形！测试光照等的设置是否正确)
-    vec3 objectColor = vec3(0.8, 0.8, 0.8); 
+    // vec3 objectColor = vec3(0.8, 0.8, 0.8); 
 
     // 5. 合并结果
     vec3 result = (ambient + diffuse + specular) * objectColor;
