@@ -13,17 +13,23 @@
 #include <iostream>
 #include "stb_image.h"
 
+unsigned int planeVAO, planeVBO;
+unsigned int snowTexture;
+
 // --- 全局变量 ---
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // 【保留】摄像机系统
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// 增加一个防抖动变量
+bool tabPressed = false;
 
 // 回调函数声明
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -74,14 +80,14 @@ int main()
     // 【新增】创建 Skybox 对象
     Skybox* skybox = new Skybox(faces);
 
-    // 3. 【新增】加载模型
-    // 这一步替代了之前“定义立方体 vertices 数组”和“配置 VAO/VBO”的过程
-    // 记得在 main 函数里设置一下 stb_image 的翻转
-    stbi_set_flip_vertically_on_load(true);
+    // 加载模型资源
+    // 加载 GLTF 模型前，通常建议关闭翻转，否则纹理会反
+    stbi_set_flip_vertically_on_load(false);
 
     std::cout << "Loading Model..." << std::endl;
     // 请确保 assets/models/house/house.obj 存在，否则程序会报错
-    Model houseModel("assets/models/house/house.obj");
+    Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
+    Model groundModel("assets/models/snow_floor/scene.gltf");
     std::cout << "Model Loaded!" << std::endl;
 
     // 4. 渲染循环
@@ -117,16 +123,25 @@ int main()
             0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
 
-        // 这里 GetViewMatrix() 假定 Update 已经被调用过
+        // 这里 GetViewMatrix()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        // 绘制模型
+        //// 绘制房子模型
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f));
+        model = glm::translate(model, glm::vec3(0.0f, 3.0f, -10.0f));
+        model = glm::scale(model, glm::vec3(2.5f));
         ourShader.setMat4("model", model);
         houseModel.Draw(ourShader);
+
+        // 地面 (外部模型) 
+        model = glm::mat4(1.0f);
+        // 通常地面需要稍微放低一点，或者放在 y=0，房子放在上面
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        // 地面通常需要放大很多倍来覆盖视野
+        model = glm::scale(model, glm::vec3(0.5f));
+        ourShader.setMat4("model", model);
+        groundModel.Draw(ourShader);
 
         // 绘制天空盒（注意：Skybox::Draw 使用的是没有平移的 view）
         skybox->Draw(view, projection);
@@ -145,9 +160,47 @@ int main()
 // ... 这里为了节省篇幅省略了，但你需要保留它们 ...
 void processInput(GLFWwindow* window)
 {
+    // 1. ESC 退出
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    // 2. TAB 切换摄像机模式 (FPS <-> God Mode)
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tabPressed)
+    {
+        camera.FPS_Mode = !camera.FPS_Mode; // 切换布尔值
+        tabPressed = true; // 锁定，直到松开按键
+
+        // 打印提示，方便调试
+        if (camera.FPS_Mode)
+            std::cout << "Switched to: FPS Mode (Walking)" << std::endl;
+        else
+            std::cout << "Switched to: Free Mode (Flying)" << std::endl;
+    }
+    // 松开 TAB 键后，解除锁定
+    if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
+    {
+        tabPressed = false;
+    }
+
+    // ============================================================
+    // 奔跑控制 (按住 R 键加速)
+    // ============================================================
+    // 定义两种速度
+    float normalSpeed = 2.5f;  // 正常走路速度 (和 Camera.h 里的默认值一致)
+    float runSpeed = 10.0f; // 奔跑速度 (4倍速，觉得慢可以改成 20.0f)
+    // 检测按键
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+        camera.MovementSpeed = runSpeed; // 加速
+    }
+    else
+    {
+        camera.MovementSpeed = normalSpeed; // 恢复
+    }
+    // ============================================================
+
+    // 3. 基础移动 (WASD)
+    // 具体的移动逻辑（是飞还是走）由 Camera 类内部的 FPS_Mode 变量决定
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -156,9 +209,14 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    // 4. 垂直移动
+    // SPACE: 上升
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         camera.ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+
+    // LEFT_CONTROL: 下降 (替换掉了原来的 LEFT_SHIFT)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
 }
 

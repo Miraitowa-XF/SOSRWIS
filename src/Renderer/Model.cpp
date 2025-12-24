@@ -20,7 +20,15 @@ void Model::loadModel(std::string const& path)
 {
     Assimp::Importer importer;
     // 读取文件：三角化(Triangulate) | 翻转UV(FlipUVs)
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+    // const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+
+    const aiScene* scene = importer.ReadFile(path,
+        aiProcess_Triangulate |
+        aiProcess_FlipUVs |
+        aiProcess_CalcTangentSpace |
+        aiProcess_PreTransformVertices |  // <--- 核心修复：把零件合并成整体
+        aiProcess_GenNormals              // 顺手重新生成法线，保证光照正确
+    );
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -92,7 +100,13 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
     // 1. 漫反射贴图
+    //std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    // 【新增】如果是 glTF 模型，材质可能存放在 BASE_COLOR 里，我们补救一下
+    if (diffuseMaps.empty()) {
+        std::vector<Texture> baseColorMaps = loadMaterialTextures(material, aiTextureType_BASE_COLOR, "texture_diffuse");
+        diffuseMaps.insert(diffuseMaps.end(), baseColorMaps.begin(), baseColorMaps.end());
+    }
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // 2. 镜面光贴图
     std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
@@ -145,9 +159,13 @@ unsigned int TextureFromFile(const char* path, const std::string& directory)
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
-        GLenum format;
+        // 【修复】给 format 一个默认值 GL_RGB，防止未初始化报错
+        GLenum format = GL_RGB;
+
         if (nrComponents == 1)
             format = GL_RED;
+        else if (nrComponents == 2)  // 【新增】处理 2 通道 (GL_RG)
+            format = GL_RG;
         else if (nrComponents == 3)
             format = GL_RGB;
         else if (nrComponents == 4)
@@ -157,6 +175,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
+        // ... 设置参数 ...
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
