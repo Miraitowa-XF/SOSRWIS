@@ -28,8 +28,8 @@ enum Camera_Movement {
 };
 
 // 默认参数
-static constexpr float DEFAULT_YAW = -90.0f;
-static constexpr float DEFAULT_PITCH = 0.0f;
+static constexpr float DEFAULT_YAW = -90.0f;        // 偏航角 0度朝向 +X 轴，-90度朝向 -Z 轴
+static constexpr float DEFAULT_PITCH = 0.0f;        // 俯仰角
 static constexpr float DEFAULT_SPEED = 3.5f;
 static constexpr float DEFAULT_SENSITIVITY = 0.005f;
 static constexpr float DEFAULT_ZOOM = 45.0f;
@@ -69,8 +69,8 @@ public:
 public:
     // 构造函数
     Camera(
-        glm::vec3 position = glm::vec3(0.0f, 1.8f, 5.0f),
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+		glm::vec3 position = glm::vec3(0.0f, 1.8f, 5.0f),       // 这里是默认的值，后续在main.cpp中会覆盖
+		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),             // 定义世界向上方向
         float yaw = DEFAULT_YAW,
         float pitch = DEFAULT_PITCH
     );

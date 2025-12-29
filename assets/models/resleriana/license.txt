@@ -1,0 +1,11 @@
+Model Information:
+* title:	Rorona (Falling Snow) Atelier Resleriana
+* source:	https://sketchfab.com/3d-models/rorona-falling-snow-atelier-resleriana-4d9cd551cd8d46f594e1282ecd16acee
+* author:	ilyakardailskiy (https://sketchfab.com/ilyakardailskiy)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Rorona (Falling Snow) Atelier Resleriana" (https://sketchfab.com/3d-models/rorona-falling-snow-atelier-resleriana-4d9cd551cd8d46f594e1282ecd16acee) by ilyakardailskiy (https://sketchfab.com/ilyakardailskiy) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

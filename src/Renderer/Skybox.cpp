@@ -72,6 +72,7 @@ void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
 {
     // 改变深度测试函数，让天空盒在最后绘制 (Optimization)
     glDepthFunc(GL_LEQUAL);
+    glDisable(GL_CULL_FACE); // 暂时关闭，为了画天空
 
     skyboxShader->use();
 
@@ -89,6 +90,9 @@ void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
 
     // 恢复默认深度测试函数
     glDepthFunc(GL_LESS);
+
+    // 【关键修复】画完天空盒后，必须立刻把剔除开回来！！
+    glEnable(GL_CULL_FACE);
 }
 
 unsigned int Skybox::loadCubemap(std::vector<std::string> faces)

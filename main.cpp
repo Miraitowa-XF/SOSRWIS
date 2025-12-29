@@ -21,7 +21,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // 【保留】摄像机系统
-Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // 初始位置的确定
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -62,6 +62,12 @@ int main()
     }
 
     glEnable(GL_DEPTH_TEST);
+    // 【新增】开启混合 (解决玻璃透明)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // 【新增】开启面剔除 (解决动漫模型黑色乱码)
+    glEnable(GL_CULL_FACE);
 
     // 2. 编译 Shader (不变)
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
@@ -69,12 +75,12 @@ int main()
 
     std::vector<std::string> faces
     {
-        "assets/textures/skybox/right.jpg",
-        "assets/textures/skybox/left.jpg",
-        "assets/textures/skybox/top.jpg",
-        "assets/textures/skybox/bottom.jpg",
-        "assets/textures/skybox/front.jpg",
-        "assets/textures/skybox/back.jpg"
+        "assets/textures/skybox/px.png",
+        "assets/textures/skybox/nx.png",
+        "assets/textures/skybox/py.png",
+        "assets/textures/skybox/ny.png",
+        "assets/textures/skybox/pz.png",
+        "assets/textures/skybox/nz.png"
     };
 
     // 【新增】创建 Skybox 对象
@@ -88,6 +94,25 @@ int main()
     // 请确保 assets/models/house/house.obj 存在，否则程序会报错
     Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
     Model groundModel("assets/models/snow_floor/scene.gltf");
+    Model snowmanModel("assets/models/snow_man/scene.gltf");
+	Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
+	Model treesModel("assets/models/newtrees/newtrees.gltf");
+	Model wellModel("assets/models/old_well/scene.gltf");
+	Model containerModel("assets/models/rusty_container/scene.gltf");
+	Model busModel("assets/models/bus/scene.gltf");
+	Model villageModel("assets/models/snowy_village/scene.gltf");
+	Model mailboxModel("assets/models/mailbox/scene.gltf");
+	Model christmasTreesModel("assets/models/christmas_tree/scene.gltf");
+	Model benchModel("assets/models/bench/scene.gltf");
+	Model lampModel("assets/models/street_lamp/scene.gltf");
+	Model jonModel("assets/models/jon_snow/scene.gltf");
+	Model dragonModel("assets/models/snow_dragon/scene.gltf");
+	Model reslerianaModel("assets/models/resleriana/scene.gltf");
+	Model fairyModel("assets/models/garden_fairy/scene.gltf");
+	Model figure1("assets/models/figure1/scene.gltf");
+	Model figure2("assets/models/figure2/scene.gltf");
+	Model fountain("assets/models/fountain/scene.gltf");
+
     std::cout << "Model Loaded!" << std::endl;
 
     // 4. 渲染循环
@@ -114,8 +139,8 @@ int main()
         ourShader.use();
 
         // 设置光照和相机矩阵
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));
+        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
+		ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));         // 光源位置
         ourShader.setVec3("viewPos", camera.Position);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
@@ -129,17 +154,158 @@ int main()
 
         //// 绘制房子模型
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 3.0f, -10.0f));
-        model = glm::scale(model, glm::vec3(2.5f));
+        model = glm::translate(model, glm::vec3(0.0f, 3.0f, -40.0f));               // 定义位置
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));   // 旋转：定义朝向 参数1：当前的矩阵 参数2：旋转的角度（弧度制，所以用 glm::radians 转换角度）参数3：旋转轴（这里是绕 Y 轴旋转，即左右转头）
+        model = glm::scale(model, glm::vec3(2.5f));                       // 定义缩放大小
         ourShader.setMat4("model", model);
         houseModel.Draw(ourShader);
 
+		// jon_snow 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(10.0f, 0.0f, -30.0f));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.07f));
+        ourShader.setMat4("model", model);
+		jonModel.Draw(ourShader);
+
+		// figure1 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -19.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f));
+        ourShader.setMat4("model", model);
+        figure1.Draw(ourShader);
+
+		// figure2 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -14.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f));
+        ourShader.setMat4("model", model);
+        figure2.Draw(ourShader);
+
+		// fairy 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 2.8f, -25.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(3.0f));
+        ourShader.setMat4("model", model);
+		fairyModel.Draw(ourShader);
+
+		// fountain 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0f, 0.0f, -15.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.015f));
+        ourShader.setMat4("model", model);
+        fountain.Draw(ourShader);
+
+		// dragon 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(30.0f, 0.0f, -43.0f));
+        model = glm::rotate(model, glm::radians(-65.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(5.0f));
+        ourShader.setMat4("model", model);
+        dragonModel.Draw(ourShader);
+
+		// 路灯模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-17.0f, 0.0f, 15.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f));
+        ourShader.setMat4("model", model);
+        lampModel.Draw(ourShader);
+
+		// 绘制第二个房子模型    
+		model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.5f, 20.0f));
+		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(15.0f));
+		ourShader.setMat4("model", model);
+		house2Model.Draw(ourShader);
+
+		// 绘制村庄模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-25.0f, 0.0f, -20.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f));
+        ourShader.setMat4("model", model);
+        villageModel.Draw(ourShader);
+
+		// resleriana 模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -17.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.7f));
+        ourShader.setMat4("model", model);
+        reslerianaModel.Draw(ourShader);
+
+		// 邮箱模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(5.0f, 0.1f, -35.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f));
+        ourShader.setMat4("model", model);
+        mailboxModel.Draw(ourShader);
+
+        // 雪人模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-5.0f, 0.5f, -35.0f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f));
+        ourShader.setMat4("model", model);
+        snowmanModel.Draw(ourShader);
+
+		// 树模型
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(25.0f, 0.0f, 25.0f));
+		model = glm::scale(model, glm::vec3(2.0f));
+		ourShader.setMat4("model", model);
+		treesModel.Draw(ourShader);
+
+		// 长椅模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(18.0f, 0.0f, 10.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f));
+        ourShader.setMat4("model", model);
+        benchModel.Draw(ourShader);
+
+		// 圣诞树模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(25.0f, 0.0f, -15.0f));
+        model = glm::scale(model, glm::vec3(2.0f));
+        ourShader.setMat4("model", model);
+        christmasTreesModel.Draw(ourShader);
+
+		// 井模型
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(35.0f, 0.0f, 15.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.01f));
+		ourShader.setMat4("model", model);
+        wellModel.Draw(ourShader);
+
+		// 集装箱模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-25.0f, 0.0f, 20.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(3.0f));
+        ourShader.setMat4("model", model);
+        containerModel.Draw(ourShader);
+
+		// 公交车模型
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-35.0f, 4.0f, 20.0f));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(4.0f));
+        ourShader.setMat4("model", model);
+        busModel.Draw(ourShader);
+
         // 地面 (外部模型) 
         model = glm::mat4(1.0f);
-        // 通常地面需要稍微放低一点，或者放在 y=0，房子放在上面
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        // 地面通常需要放大很多倍来覆盖视野
-        model = glm::scale(model, glm::vec3(0.5f));
+        model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
+        model = glm::scale(model, glm::vec3(0.25f));
         ourShader.setMat4("model", model);
         groundModel.Draw(ourShader);
 
@@ -156,8 +322,6 @@ int main()
 }
 
 // ... 下面是所有的回调函数 (processInput, mouse_callback 等) ...
-// ... 请把之前 Camera 测试代码里下面那部分直接复制过来即可，不需要改动 ...
-// ... 这里为了节省篇幅省略了，但你需要保留它们 ...
 void processInput(GLFWwindow* window)
 {
     // 1. ESC 退出
@@ -183,10 +347,15 @@ void processInput(GLFWwindow* window)
     }
 
     // ============================================================
-    // 奔跑控制 (按住 R 键加速)
+    //  记录移动前的位置
+    // ============================================================
+    glm::vec3 oldPosition = camera.Position;
+
+    // ============================================================
+    //  奔跑控制 (按住 R 键加速)
     // ============================================================
     // 定义两种速度
-    float normalSpeed = 2.5f;  // 正常走路速度 (和 Camera.h 里的默认值一致)
+    float normalSpeed = 5.0f;  // 正常走路速度 (和 Camera.h 里的默认值一致)
     float runSpeed = 10.0f; // 奔跑速度 (4倍速，觉得慢可以改成 20.0f)
     // 检测按键
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
@@ -218,6 +387,17 @@ void processInput(GLFWwindow* window)
     // LEFT_CONTROL: 下降 (替换掉了原来的 LEFT_SHIFT)
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+
+    // ============================================================
+    //  检测位置是否改变，并打印
+    // ============================================================
+    if (camera.Position != oldPosition)
+    {
+        std::cout << "Current Pos: [ "
+            << camera.Position.x << ", "
+            << camera.Position.y << ", "
+            << camera.Position.z << " ]" << std::endl;
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)

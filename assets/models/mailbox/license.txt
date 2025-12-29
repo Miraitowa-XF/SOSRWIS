@@ -1,0 +1,11 @@
+Model Information:
+* title:	Japanese mailbox
+* source:	https://sketchfab.com/3d-models/japanese-mailbox-aad08d888ae4498da59c47faf149208e
+* author:	Lisov1k (https://sketchfab.com/Lisov1k)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Japanese mailbox" (https://sketchfab.com/3d-models/japanese-mailbox-aad08d888ae4498da59c47faf149208e) by Lisov1k (https://sketchfab.com/Lisov1k) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
