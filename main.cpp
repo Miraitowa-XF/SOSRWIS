@@ -7,10 +7,12 @@
 // 引入我们的核心库
 #include "Core/Shader.h"
 #include "Core/Camera.h"
+#include "Core/Collision.h"
 #include "Renderer/Model.h" // <--- 【新增】引入模型类
 #include "Renderer/Skybox.h"
 
 #include <iostream>
+#include <algorithm>  // for min/max logic inside main if needed
 #include "stb_image.h"
 
 unsigned int planeVAO, planeVBO;
@@ -31,11 +33,74 @@ float lastFrame = 0.0f;
 // 增加一个防抖动变量
 bool tabPressed = false;
 
+bool showColliders = false; // 是否显示空气墙
+unsigned int debugCubeVAO = 0, debugCubeVBO = 0;
+
+// 【新增】定义一个结构体，用来管理场景里的每一个物体
+struct SceneObject {
+    Model* model;       // 模型指针
+    glm::vec3 position; // 位置
+    glm::vec3 scale;    // 缩放
+    float rotationAngle; // 旋转角度 (度)
+    glm::vec3 rotationAxis; // 旋转轴
+
+    SceneObject(Model* m, glm::vec3 pos, glm::vec3 s, float rot, glm::vec3 axis)
+        : model(m), position(pos), scale(s), rotationAngle(rot), rotationAxis(axis) {
+    }
+};
+
+// 【新增】存储所有场景对象的列表
+std::vector<SceneObject> allObjects;
+
+// 【新增】存储所有障碍物的碰撞盒列表
+std::vector<AABB> sceneColliders;
+
 // 回调函数声明
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+
+// 【新增】手动添加一个障碍物 (空气墙)
+// center: 盒子的中心坐标
+// size: 盒子的长宽高 (例如: vec3(10.0f, 5.0f, 1.0f) 代表一面 10米宽、1米厚的墙)
+void addInvisibleWall(glm::vec3 center, glm::vec3 size) {
+    glm::vec3 halfSize = size * 0.5f;
+    glm::vec3 min = center - halfSize;
+    glm::vec3 max = center + halfSize;
+
+    // 直接加入碰撞列表
+    sceneColliders.push_back(AABB(min, max));
+}
+
+// 在空间中建立参考立方体（用于可视化添加碰撞盒子）
+void initDebugCube() {
+    float vertices[] = {
+        // 只需要一个单位立方体的顶点 (0,0,0) 到 (1,1,1) 或者 (-0.5,-0.5,-0.5) 到 (0.5,0.5,0.5)
+        // 这里用 -0.5 到 0.5 方便缩放
+        -0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f, -0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+
+        -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f, -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f, -0.5f, -0.5f,  0.5f,
+
+        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f, -0.5f,  0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,  0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f, -0.5f,  0.5f,  0.5f
+    };
+    glGenVertexArrays(1, &debugCubeVAO);
+    glGenBuffers(1, &debugCubeVBO);
+    glBindVertexArray(debugCubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, debugCubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+}
 
 int main()
 {
@@ -73,6 +138,7 @@ int main()
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 
 
+    // 3. Skybox
     std::vector<std::string> faces
     {
         "assets/textures/skybox/px.png",
@@ -82,8 +148,7 @@ int main()
         "assets/textures/skybox/pz.png",
         "assets/textures/skybox/nz.png"
     };
-
-    // 【新增】创建 Skybox 对象
+    // 创建 Skybox 对象
     Skybox* skybox = new Skybox(faces);
 
     // 加载模型资源
@@ -115,6 +180,59 @@ int main()
 
     std::cout << "Model Loaded!" << std::endl;
 
+    initDebugCube();
+    // =================================================================================
+    // 【关键步骤】配置场景对象列表
+    // 这里我们将之前分散在 while 循环里的硬编码参数统一管理。
+    // 参数顺序：模型指针, 位置, 缩放, 旋转角度, 旋转轴
+    // =================================================================================
+
+    // 1. 房子
+    allObjects.push_back(SceneObject(&houseModel, glm::vec3(0.0f, 3.0f, -40.0f), glm::vec3(2.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 2. Jon Snow
+    allObjects.push_back(SceneObject(&jonModel, glm::vec3(10.0f, 0.0f, -30.0f), glm::vec3(0.07f), 180.0f, glm::vec3(0, 1, 0)));
+    // 3. Figure 1
+    allObjects.push_back(SceneObject(&figure1, glm::vec3(15.0f, 0.0f, -19.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 4. Figure 2
+    allObjects.push_back(SceneObject(&figure2, glm::vec3(15.0f, 0.0f, -14.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 5. Fairy
+    allObjects.push_back(SceneObject(&fairyModel, glm::vec3(0.0f, 2.8f, -25.0f), glm::vec3(3.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 6. Fountain
+    allObjects.push_back(SceneObject(&fountain, glm::vec3(-3.0f, 0.0f, -15.0f), glm::vec3(0.015f), 0.0f, glm::vec3(0, 1, 0)));
+    // 7. Dragon
+    allObjects.push_back(SceneObject(&dragonModel, glm::vec3(30.0f, 0.0f, -43.0f), glm::vec3(5.0f), -65.0f, glm::vec3(0, 1, 0)));
+    // 8. Lamp
+    allObjects.push_back(SceneObject(&lampModel, glm::vec3(-17.0f, 0.0f, 15.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 9. House 2
+    allObjects.push_back(SceneObject(&house2Model, glm::vec3(0.0f, 0.5f, 20.0f), glm::vec3(15.0f), 180.0f, glm::vec3(0, 1, 0)));
+    // 10. Village
+    allObjects.push_back(SceneObject(&villageModel, glm::vec3(-25.0f, 0.0f, -20.0f), glm::vec3(0.5f), 90.0f, glm::vec3(0, 1, 0)));
+    // 11. Resleriana
+    allObjects.push_back(SceneObject(&reslerianaModel, glm::vec3(15.0f, 0.0f, -17.0f), glm::vec3(0.7f), -90.0f, glm::vec3(0, 1, 0)));
+    // 12. Mailbox
+    allObjects.push_back(SceneObject(&mailboxModel, glm::vec3(5.0f, 0.1f, -35.0f), glm::vec3(1.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 13. Snowman
+    allObjects.push_back(SceneObject(&snowmanModel, glm::vec3(-5.0f, 0.5f, -35.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 14. Trees
+    allObjects.push_back(SceneObject(&treesModel, glm::vec3(25.0f, 0.0f, 25.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 15. Bench
+    allObjects.push_back(SceneObject(&benchModel, glm::vec3(18.0f, 0.0f, 10.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 16. Christmas Tree
+    allObjects.push_back(SceneObject(&christmasTreesModel, glm::vec3(25.0f, 0.0f, -15.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 17. Well
+    allObjects.push_back(SceneObject(&wellModel, glm::vec3(35.0f, 0.0f, 15.0f), glm::vec3(0.01f), 0.0f, glm::vec3(0, 1, 0)));
+    // 18. Container
+    allObjects.push_back(SceneObject(&containerModel, glm::vec3(-25.0f, 0.0f, 20.0f), glm::vec3(3.0f), 90.0f, glm::vec3(0, 1, 0)));
+    // 19. Bus
+    allObjects.push_back(SceneObject(&busModel, glm::vec3(-35.0f, 4.0f, 20.0f), glm::vec3(4.0f), 180.0f, glm::vec3(0, 1, 0)));
+
+    // (大工程)手动定义不可通行的区域
+    // 你需要利用之前写的“打印坐标”功能，走到墙边，记下坐标，然后在这里写代码
+    // 例如：给房子后面加一堵空气墙
+    // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
+    addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+
+
     // 4. 渲染循环
     while (!glfwWindowShouldClose(window))
     {
@@ -122,10 +240,40 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // ==========================================
+        // 【新增】碰撞检测回退逻辑
+        // ==========================================
+        glm::vec3 oldPosition = camera.Position; // 1. 备份位置
+
         // 处理输入
         processInput(window);
 
-        // *** 新增：每帧更新相机（把鼠标目标角度应用并平滑） ***
+        // 3. 检查碰撞 (仅在 FPS 模式下)
+        if (camera.FPS_Mode)
+        {
+            // 定义玩家的身体大小 (0.3宽, 1.8高)
+            glm::vec3 playerHalfSize(0.3f, 0.9f, 0.3f);
+            AABB playerBox(camera.Position - playerHalfSize, camera.Position + playerHalfSize);
+
+            bool hit = false;
+            for (const auto& box : sceneColliders) {
+                if (playerBox.checkCollision(box)) {
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (hit) {
+                // 撞墙了！回退！
+                camera.Position = oldPosition;
+            }
+
+            // 锁定高度 (模拟在地面行走)
+            camera.Position.y = 3.0f; // 这里的 3.0 是你设定的眼睛高度
+        }
+        // ==========================================
+
+        // 每帧更新相机（把鼠标目标角度应用并平滑）
         camera.Update(deltaTime);
 
         //// 可选：当你觉得响应迟钝时，短时提高速度
@@ -152,158 +300,23 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        //// 绘制房子模型
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 3.0f, -40.0f));               // 定义位置
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));   // 旋转：定义朝向 参数1：当前的矩阵 参数2：旋转的角度（弧度制，所以用 glm::radians 转换角度）参数3：旋转轴（这里是绕 Y 轴旋转，即左右转头）
-        model = glm::scale(model, glm::vec3(2.5f));                       // 定义缩放大小
-        ourShader.setMat4("model", model);
-        houseModel.Draw(ourShader);
+        // =======================================================
+        // 【关键步骤】自动渲染所有对象
+        // 这里的循环替代了你之前那几百行重复的 draw 代码
+        // =======================================================
+        for (const auto& obj : allObjects)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+            model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
+            model = glm::scale(model, obj.scale);
 
-		// jon_snow 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(10.0f, 0.0f, -30.0f));
-        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.07f));
-        ourShader.setMat4("model", model);
-		jonModel.Draw(ourShader);
-
-		// figure1 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -19.0f));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f));
-        ourShader.setMat4("model", model);
-        figure1.Draw(ourShader);
-
-		// figure2 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -14.0f));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f));
-        ourShader.setMat4("model", model);
-        figure2.Draw(ourShader);
-
-		// fairy 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.8f, -25.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(3.0f));
-        ourShader.setMat4("model", model);
-		fairyModel.Draw(ourShader);
-
-		// fountain 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-3.0f, 0.0f, -15.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.015f));
-        ourShader.setMat4("model", model);
-        fountain.Draw(ourShader);
-
-		// dragon 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(30.0f, 0.0f, -43.0f));
-        model = glm::rotate(model, glm::radians(-65.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(5.0f));
-        ourShader.setMat4("model", model);
-        dragonModel.Draw(ourShader);
-
-		// 路灯模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-17.0f, 0.0f, 15.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(2.0f));
-        ourShader.setMat4("model", model);
-        lampModel.Draw(ourShader);
-
-		// 绘制第二个房子模型    
-		model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.5f, 20.0f));
-		model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(15.0f));
-		ourShader.setMat4("model", model);
-		house2Model.Draw(ourShader);
-
-		// 绘制村庄模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-25.0f, 0.0f, -20.0f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f));
-        ourShader.setMat4("model", model);
-        villageModel.Draw(ourShader);
-
-		// resleriana 模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(15.0f, 0.0f, -17.0f));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.7f));
-        ourShader.setMat4("model", model);
-        reslerianaModel.Draw(ourShader);
-
-		// 邮箱模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(5.0f, 0.1f, -35.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.0f));
-        ourShader.setMat4("model", model);
-        mailboxModel.Draw(ourShader);
-
-        // 雪人模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-5.0f, 0.5f, -35.0f));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f));
-        ourShader.setMat4("model", model);
-        snowmanModel.Draw(ourShader);
-
-		// 树模型
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(25.0f, 0.0f, 25.0f));
-		model = glm::scale(model, glm::vec3(2.0f));
-		ourShader.setMat4("model", model);
-		treesModel.Draw(ourShader);
-
-		// 长椅模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(18.0f, 0.0f, 10.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(2.0f));
-        ourShader.setMat4("model", model);
-        benchModel.Draw(ourShader);
-
-		// 圣诞树模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(25.0f, 0.0f, -15.0f));
-        model = glm::scale(model, glm::vec3(2.0f));
-        ourShader.setMat4("model", model);
-        christmasTreesModel.Draw(ourShader);
-
-		// 井模型
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(35.0f, 0.0f, 15.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.01f));
-		ourShader.setMat4("model", model);
-        wellModel.Draw(ourShader);
-
-		// 集装箱模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-25.0f, 0.0f, 20.0f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(3.0f));
-        ourShader.setMat4("model", model);
-        containerModel.Draw(ourShader);
-
-		// 公交车模型
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-35.0f, 4.0f, 20.0f));
-        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(4.0f));
-        ourShader.setMat4("model", model);
-        busModel.Draw(ourShader);
+            ourShader.setMat4("model", model);
+            obj.model->Draw(ourShader);
+        }
 
         // 地面 (外部模型) 
-        model = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
         model = glm::scale(model, glm::vec3(0.25f));
         ourShader.setMat4("model", model);
@@ -312,10 +325,41 @@ int main()
         // 绘制天空盒（注意：Skybox::Draw 使用的是没有平移的 view）
         skybox->Draw(view, projection);
 
+        // 绘制空气墙
+        if (showColliders) {
+            // 使用线框模式
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+            // 这里可以使用一个简单的纯色 shader，或者复用 ourShader 但忽略纹理
+            // 为了简单，我们复用 ourShader，但需要一个纯白纹理（你之前在 Model.cpp 里写的 GetDefaultWhiteTexture 很有用）
+            // 或者简单粗暴地利用 basic.frag 的特性（如果没有绑定材质，可能会变黑，但线框能看清就行）
+
+            ourShader.use();
+            ourShader.setVec3("lightColor", glm::vec3(1.0f)); // 确保够亮
+
+            glBindVertexArray(debugCubeVAO);
+
+            for (const auto& box : sceneColliders) {
+                // 计算中心点和大小
+                glm::vec3 size = box.max - box.min;
+                glm::vec3 center = box.min + size * 0.5f;
+
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, center);
+                model = glm::scale(model, size); // 缩放成盒子大小
+
+                ourShader.setMat4("model", model);
+                // 线框绘制
+                glDrawArrays(GL_LINES, 0, 24);
+            }
+
+            // 恢复填充模式
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     glfwTerminate();
     return 0;
@@ -398,6 +442,16 @@ void processInput(GLFWwindow* window)
             << camera.Position.y << ", "
             << camera.Position.z << " ]" << std::endl;
     }
+
+    // 切换碰撞和盒子的可视化，定义一个静态变量防止连按
+    static bool f1Pressed = false;
+    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && !f1Pressed) {
+        showColliders = !showColliders;
+        f1Pressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE) {
+        f1Pressed = false;
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -443,3 +497,4 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+
