@@ -64,7 +64,7 @@ public:
     float ZoomSmoothSpeed;     // 缩放平滑速度（单位：1/秒）
 
     bool FPS_Mode = false; // 默认关闭，按键开启
-    float GroundHeight = 1.7f; // 人的眼睛高度
+    float GroundHeight = 2.5f; // 人的眼睛高度
 
 public:
     // 构造函数

@@ -102,6 +102,29 @@ void initDebugCube() {
     glEnableVertexAttribArray(0);
 }
 
+// 封装的绘制场景函数
+// 参数：当前使用的 Shader
+void drawScene(Shader& shader, const std::vector<SceneObject>& objects, Model& ground)
+{
+    // 1. 绘制所有物体
+    for (const auto& obj : objects)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, obj.position);
+        model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
+        model = glm::scale(model, obj.scale);
+        shader.setMat4("model", model);
+        obj.model->Draw(shader);
+    }
+
+    // 2. 绘制地面
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
+    model = glm::scale(model, glm::vec3(0.25f));
+    shader.setMat4("model", model);
+    ground.Draw(shader);
+}
+
 int main()
 {
     // 1. 初始化 GLFW (不变)
@@ -232,6 +255,42 @@ int main()
     // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
     addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 
+    // ==========================================
+    // 【新增】配置阴影贴图 FBO
+    // ==========================================
+    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // 分辨率越高越清晰
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+
+    // 创建深度纹理
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    // 设置纹理过滤
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // 设置纹理环绕 (防止阴影以外的区域变黑)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    // 绑定到 FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE); // 不需要颜色
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // 加载阴影 Shader
+    Shader depthShader("assets/shaders/shadow_depth.vert", "assets/shaders/shadow_depth.frag");
+
+    // 配置主 Shader 的阴影纹理槽位 (设为 15，避开模型自带纹理)
+    ourShader.use();
+    ourShader.setInt("shadowMap", 15);
 
     // 4. 渲染循环
     while (!glfwWindowShouldClose(window))
@@ -286,10 +345,70 @@ int main()
 
         ourShader.use();
 
-        // 设置光照和相机矩阵
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
-		ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));         // 光源位置
+  //      // 设置光照和相机矩阵
+  //      ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
+		//ourShader.setVec3("lightPos", glm::vec3(0.0f, 20.0f, 0.0f));         // 光源位置
+  //      ourShader.setVec3("viewPos", camera.Position);
+
+
+        // 定义光源位置 (需要固定，不能乱跑)
+        glm::vec3 lightPos(10.0f, 20.0f, 10.0f); // 模拟太阳，放高一点
+
+        // ============================================================
+        // 1. 第一遍渲染：从光源视角生成深度图 (Shadow Pass)
+        // ============================================================
+
+        // 计算光空间矩阵 (正交投影适合定向光/太阳光)
+        float near_plane = 1.0f, far_plane = 100.0f;
+        // 下面的参数决定了阴影覆盖的范围，太小会导致远处没影子，太大导致影子模糊
+        glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        depthShader.use();
+        depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT); // 切换到阴影图分辨率
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // 【技巧】渲染阴影时使用正面剔除，可以极大减少“阴影悬浮”问题
+        glCullFace(GL_FRONT);
+
+        // 调用我们提取出来的绘制函数
+        drawScene(depthShader, allObjects, groundModel);
+
+        glCullFace(GL_BACK); // 改回背面剔除
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // 【技巧】渲染阴影时使用正面剔除，可以极大减少“阴影悬浮”问题
+        glCullFace(GL_FRONT);
+
+        // 调用我们提取出来的绘制函数
+        drawScene(depthShader, allObjects, groundModel);
+
+        glCullFace(GL_BACK); // 改回背面剔除
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // ============================================================
+        // 2. 第二遍渲染：正常绘制场景 (Render Pass)
+        // ============================================================
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT); // 恢复屏幕分辨率
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ourShader.use();
+
+        // 传递光照参数
+        ourShader.setVec3("lightColor", glm::vec3(1.0f));
+        ourShader.setVec3("lightPos", lightPos);
         ourShader.setVec3("viewPos", camera.Position);
+        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); // 传给 Shader 算坐标
+
+        // 绑定阴影贴图到 15 号槽
+        glActiveTexture(GL_TEXTURE15);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
@@ -300,20 +419,8 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        // =======================================================
-        // 【关键步骤】自动渲染所有对象
-        // 这里的循环替代了你之前那几百行重复的 draw 代码
-        // =======================================================
-        for (const auto& obj : allObjects)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, obj.position);
-            model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
-            model = glm::scale(model, obj.scale);
-
-            ourShader.setMat4("model", model);
-            obj.model->Draw(ourShader);
-        }
+        // 绘制场景
+        drawScene(ourShader, allObjects, groundModel);
 
         // 地面 (外部模型) 
         glm::mat4 model = glm::mat4(1.0f);
