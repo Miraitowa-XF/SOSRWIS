@@ -57,6 +57,8 @@ void Mesh::Draw(Shader& shader)
             number = std::to_string(diffuseNr++);
         else if (name == "texture_specular")
             number = std::to_string(specularNr++); // transfer unsigned int to stream
+        else if (name == "texture_emissive")
+            number = std::to_string(1); // 我们通常只需要一张自发光图
 
         // 设定 shader 中的 uniform 变量 (如: material.texture_diffuse1)
         // 假设你的 shader 里纹理叫 diffuseTexture，这里可能需要根据 shader 调整

@@ -7,10 +7,12 @@
 // 引入我们的核心库
 #include "Core/Shader.h"
 #include "Core/Camera.h"
+#include "Core/Collision.h"
 #include "Renderer/Model.h" // <--- 【新增】引入模型类
 #include "Renderer/Skybox.h"
 
 #include <iostream>
+#include <algorithm>  // for min/max logic inside main if needed
 #include "stb_image.h"
 
 unsigned int planeVAO, planeVBO;
@@ -21,7 +23,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // 【保留】摄像机系统
-Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // 初始位置的确定
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -31,11 +33,74 @@ float lastFrame = 0.0f;
 // 增加一个防抖动变量
 bool tabPressed = false;
 
+bool showColliders = false; // 是否显示空气墙
+unsigned int debugCubeVAO = 0, debugCubeVBO = 0;
+
+// 【新增】定义一个结构体，用来管理场景里的每一个物体
+struct SceneObject {
+    Model* model;       // 模型指针
+    glm::vec3 position; // 位置
+    glm::vec3 scale;    // 缩放
+    float rotationAngle; // 旋转角度 (度)
+    glm::vec3 rotationAxis; // 旋转轴
+
+    SceneObject(Model* m, glm::vec3 pos, glm::vec3 s, float rot, glm::vec3 axis)
+        : model(m), position(pos), scale(s), rotationAngle(rot), rotationAxis(axis) {
+    }
+};
+
+// 【新增】存储所有场景对象的列表
+std::vector<SceneObject> allObjects;
+
+// 【新增】存储所有障碍物的碰撞盒列表
+std::vector<AABB> sceneColliders;
+
 // 回调函数声明
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+
+// 【新增】手动添加一个障碍物 (空气墙)
+// center: 盒子的中心坐标
+// size: 盒子的长宽高 (例如: vec3(10.0f, 5.0f, 1.0f) 代表一面 10米宽、1米厚的墙)
+void addInvisibleWall(glm::vec3 center, glm::vec3 size) {
+    glm::vec3 halfSize = size * 0.5f;
+    glm::vec3 min = center - halfSize;
+    glm::vec3 max = center + halfSize;
+
+    // 直接加入碰撞列表
+    sceneColliders.push_back(AABB(min, max));
+}
+
+// 在空间中建立参考立方体（用于可视化添加碰撞盒子）
+void initDebugCube() {
+    float vertices[] = {
+        // 只需要一个单位立方体的顶点 (0,0,0) 到 (1,1,1) 或者 (-0.5,-0.5,-0.5) 到 (0.5,0.5,0.5)
+        // 这里用 -0.5 到 0.5 方便缩放
+        -0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f, -0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+
+        -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f, -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f, -0.5f, -0.5f,  0.5f,
+
+        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f, -0.5f,  0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,  0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f, -0.5f,  0.5f,  0.5f
+    };
+    glGenVertexArrays(1, &debugCubeVAO);
+    glGenBuffers(1, &debugCubeVBO);
+    glBindVertexArray(debugCubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, debugCubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+}
 
 int main()
 {
@@ -62,22 +127,28 @@ int main()
     }
 
     glEnable(GL_DEPTH_TEST);
+    // 【新增】开启混合 (解决玻璃透明)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // 【新增】开启面剔除 (解决动漫模型黑色乱码)
+    glEnable(GL_CULL_FACE);
 
     // 2. 编译 Shader (不变)
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 
 
+    // 3. Skybox
     std::vector<std::string> faces
     {
-        "assets/textures/skybox/right.jpg",
-        "assets/textures/skybox/left.jpg",
-        "assets/textures/skybox/top.jpg",
-        "assets/textures/skybox/bottom.jpg",
-        "assets/textures/skybox/front.jpg",
-        "assets/textures/skybox/back.jpg"
+        "assets/textures/skybox/px.png",
+        "assets/textures/skybox/nx.png",
+        "assets/textures/skybox/py.png",
+        "assets/textures/skybox/ny.png",
+        "assets/textures/skybox/pz.png",
+        "assets/textures/skybox/nz.png"
     };
-
-    // 【新增】创建 Skybox 对象
+    // 创建 Skybox 对象
     Skybox* skybox = new Skybox(faces);
 
     // 加载模型资源
@@ -88,7 +159,79 @@ int main()
     // 请确保 assets/models/house/house.obj 存在，否则程序会报错
     Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
     Model groundModel("assets/models/snow_floor/scene.gltf");
+    Model snowmanModel("assets/models/snow_man/scene.gltf");
+	Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
+	Model treesModel("assets/models/newtrees/newtrees.gltf");
+	Model wellModel("assets/models/old_well/scene.gltf");
+	Model containerModel("assets/models/rusty_container/scene.gltf");
+	Model busModel("assets/models/bus/scene.gltf");
+	Model villageModel("assets/models/snowy_village/scene.gltf");
+	Model mailboxModel("assets/models/mailbox/scene.gltf");
+	Model christmasTreesModel("assets/models/christmas_tree/scene.gltf");
+	Model benchModel("assets/models/bench/scene.gltf");
+	Model lampModel("assets/models/street_lamp/scene.gltf");
+	Model jonModel("assets/models/jon_snow/scene.gltf");
+	Model dragonModel("assets/models/snow_dragon/scene.gltf");
+	Model reslerianaModel("assets/models/resleriana/scene.gltf");
+	Model fairyModel("assets/models/garden_fairy/scene.gltf");
+	Model figure1("assets/models/figure1/scene.gltf");
+	Model figure2("assets/models/figure2/scene.gltf");
+	Model fountain("assets/models/fountain/scene.gltf");
+
     std::cout << "Model Loaded!" << std::endl;
+
+    initDebugCube();
+    // =================================================================================
+    // 【关键步骤】配置场景对象列表
+    // 这里我们将之前分散在 while 循环里的硬编码参数统一管理。
+    // 参数顺序：模型指针, 位置, 缩放, 旋转角度, 旋转轴
+    // =================================================================================
+
+    // 1. 房子
+    allObjects.push_back(SceneObject(&houseModel, glm::vec3(0.0f, 3.0f, -40.0f), glm::vec3(2.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 2. Jon Snow
+    allObjects.push_back(SceneObject(&jonModel, glm::vec3(10.0f, 0.0f, -30.0f), glm::vec3(0.07f), 180.0f, glm::vec3(0, 1, 0)));
+    // 3. Figure 1
+    allObjects.push_back(SceneObject(&figure1, glm::vec3(15.0f, 0.0f, -19.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 4. Figure 2
+    allObjects.push_back(SceneObject(&figure2, glm::vec3(15.0f, 0.0f, -14.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 5. Fairy
+    allObjects.push_back(SceneObject(&fairyModel, glm::vec3(0.0f, 2.8f, -25.0f), glm::vec3(3.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 6. Fountain
+    allObjects.push_back(SceneObject(&fountain, glm::vec3(-3.0f, 0.0f, -15.0f), glm::vec3(0.015f), 0.0f, glm::vec3(0, 1, 0)));
+    // 7. Dragon
+    allObjects.push_back(SceneObject(&dragonModel, glm::vec3(30.0f, 0.0f, -43.0f), glm::vec3(5.0f), -65.0f, glm::vec3(0, 1, 0)));
+    // 8. Lamp
+    allObjects.push_back(SceneObject(&lampModel, glm::vec3(-17.0f, 0.0f, 15.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 9. House 2
+    allObjects.push_back(SceneObject(&house2Model, glm::vec3(0.0f, 0.5f, 20.0f), glm::vec3(15.0f), 180.0f, glm::vec3(0, 1, 0)));
+    // 10. Village
+    allObjects.push_back(SceneObject(&villageModel, glm::vec3(-25.0f, 0.0f, -20.0f), glm::vec3(0.5f), 90.0f, glm::vec3(0, 1, 0)));
+    // 11. Resleriana
+    allObjects.push_back(SceneObject(&reslerianaModel, glm::vec3(15.0f, 0.0f, -17.0f), glm::vec3(0.7f), -90.0f, glm::vec3(0, 1, 0)));
+    // 12. Mailbox
+    allObjects.push_back(SceneObject(&mailboxModel, glm::vec3(5.0f, 0.1f, -35.0f), glm::vec3(1.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 13. Snowman
+    allObjects.push_back(SceneObject(&snowmanModel, glm::vec3(-5.0f, 0.5f, -35.0f), glm::vec3(0.5f), -90.0f, glm::vec3(0, 1, 0)));
+    // 14. Trees
+    allObjects.push_back(SceneObject(&treesModel, glm::vec3(25.0f, 0.0f, 25.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 15. Bench
+    allObjects.push_back(SceneObject(&benchModel, glm::vec3(18.0f, 0.0f, 10.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 16. Christmas Tree
+    allObjects.push_back(SceneObject(&christmasTreesModel, glm::vec3(25.0f, 0.0f, -15.0f), glm::vec3(2.0f), 0.0f, glm::vec3(0, 1, 0)));
+    // 17. Well
+    allObjects.push_back(SceneObject(&wellModel, glm::vec3(35.0f, 0.0f, 15.0f), glm::vec3(0.01f), 0.0f, glm::vec3(0, 1, 0)));
+    // 18. Container
+    allObjects.push_back(SceneObject(&containerModel, glm::vec3(-25.0f, 0.0f, 20.0f), glm::vec3(3.0f), 90.0f, glm::vec3(0, 1, 0)));
+    // 19. Bus
+    allObjects.push_back(SceneObject(&busModel, glm::vec3(-35.0f, 4.0f, 20.0f), glm::vec3(4.0f), 180.0f, glm::vec3(0, 1, 0)));
+
+    // (大工程)手动定义不可通行的区域
+    // 你需要利用之前写的“打印坐标”功能，走到墙边，记下坐标，然后在这里写代码
+    // 例如：给房子后面加一堵空气墙
+    // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
+    addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+
 
     // 4. 渲染循环
     while (!glfwWindowShouldClose(window))
@@ -97,10 +240,40 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // ==========================================
+        // 【新增】碰撞检测回退逻辑
+        // ==========================================
+        glm::vec3 oldPosition = camera.Position; // 1. 备份位置
+
         // 处理输入
         processInput(window);
 
-        // *** 新增：每帧更新相机（把鼠标目标角度应用并平滑） ***
+        // 3. 检查碰撞 (仅在 FPS 模式下)
+        if (camera.FPS_Mode)
+        {
+            // 定义玩家的身体大小 (0.3宽, 1.8高)
+            glm::vec3 playerHalfSize(0.3f, 0.9f, 0.3f);
+            AABB playerBox(camera.Position - playerHalfSize, camera.Position + playerHalfSize);
+
+            bool hit = false;
+            for (const auto& box : sceneColliders) {
+                if (playerBox.checkCollision(box)) {
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (hit) {
+                // 撞墙了！回退！
+                camera.Position = oldPosition;
+            }
+
+            // 锁定高度 (模拟在地面行走)
+            camera.Position.y = 3.0f; // 这里的 3.0 是你设定的眼睛高度
+        }
+        // ==========================================
+
+        // 每帧更新相机（把鼠标目标角度应用并平滑）
         camera.Update(deltaTime);
 
         //// 可选：当你觉得响应迟钝时，短时提高速度
@@ -114,8 +287,8 @@ int main()
         ourShader.use();
 
         // 设置光照和相机矩阵
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));
+        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
+		ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));         // 光源位置
         ourShader.setVec3("viewPos", camera.Position);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
@@ -127,37 +300,72 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        //// 绘制房子模型
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 3.0f, -10.0f));
-        model = glm::scale(model, glm::vec3(2.5f));
-        ourShader.setMat4("model", model);
-        houseModel.Draw(ourShader);
+        // =======================================================
+        // 【关键步骤】自动渲染所有对象
+        // 这里的循环替代了你之前那几百行重复的 draw 代码
+        // =======================================================
+        for (const auto& obj : allObjects)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, obj.position);
+            model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
+            model = glm::scale(model, obj.scale);
+
+            ourShader.setMat4("model", model);
+            obj.model->Draw(ourShader);
+        }
 
         // 地面 (外部模型) 
-        model = glm::mat4(1.0f);
-        // 通常地面需要稍微放低一点，或者放在 y=0，房子放在上面
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        // 地面通常需要放大很多倍来覆盖视野
-        model = glm::scale(model, glm::vec3(0.5f));
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
+        model = glm::scale(model, glm::vec3(0.25f));
         ourShader.setMat4("model", model);
         groundModel.Draw(ourShader);
 
         // 绘制天空盒（注意：Skybox::Draw 使用的是没有平移的 view）
         skybox->Draw(view, projection);
 
+        // 绘制空气墙
+        if (showColliders) {
+            // 使用线框模式
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+            // 这里可以使用一个简单的纯色 shader，或者复用 ourShader 但忽略纹理
+            // 为了简单，我们复用 ourShader，但需要一个纯白纹理（你之前在 Model.cpp 里写的 GetDefaultWhiteTexture 很有用）
+            // 或者简单粗暴地利用 basic.frag 的特性（如果没有绑定材质，可能会变黑，但线框能看清就行）
+
+            ourShader.use();
+            ourShader.setVec3("lightColor", glm::vec3(1.0f)); // 确保够亮
+
+            glBindVertexArray(debugCubeVAO);
+
+            for (const auto& box : sceneColliders) {
+                // 计算中心点和大小
+                glm::vec3 size = box.max - box.min;
+                glm::vec3 center = box.min + size * 0.5f;
+
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, center);
+                model = glm::scale(model, size); // 缩放成盒子大小
+
+                ourShader.setMat4("model", model);
+                // 线框绘制
+                glDrawArrays(GL_LINES, 0, 24);
+            }
+
+            // 恢复填充模式
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     glfwTerminate();
     return 0;
 }
 
 // ... 下面是所有的回调函数 (processInput, mouse_callback 等) ...
-// ... 请把之前 Camera 测试代码里下面那部分直接复制过来即可，不需要改动 ...
-// ... 这里为了节省篇幅省略了，但你需要保留它们 ...
 void processInput(GLFWwindow* window)
 {
     // 1. ESC 退出
@@ -183,10 +391,15 @@ void processInput(GLFWwindow* window)
     }
 
     // ============================================================
-    // 奔跑控制 (按住 R 键加速)
+    //  记录移动前的位置
+    // ============================================================
+    glm::vec3 oldPosition = camera.Position;
+
+    // ============================================================
+    //  奔跑控制 (按住 R 键加速)
     // ============================================================
     // 定义两种速度
-    float normalSpeed = 2.5f;  // 正常走路速度 (和 Camera.h 里的默认值一致)
+    float normalSpeed = 5.0f;  // 正常走路速度 (和 Camera.h 里的默认值一致)
     float runSpeed = 10.0f; // 奔跑速度 (4倍速，觉得慢可以改成 20.0f)
     // 检测按键
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
@@ -218,6 +431,27 @@ void processInput(GLFWwindow* window)
     // LEFT_CONTROL: 下降 (替换掉了原来的 LEFT_SHIFT)
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+
+    // ============================================================
+    //  检测位置是否改变，并打印
+    // ============================================================
+    if (camera.Position != oldPosition)
+    {
+        std::cout << "Current Pos: [ "
+            << camera.Position.x << ", "
+            << camera.Position.y << ", "
+            << camera.Position.z << " ]" << std::endl;
+    }
+
+    // 切换碰撞和盒子的可视化，定义一个静态变量防止连按
+    static bool f1Pressed = false;
+    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && !f1Pressed) {
+        showColliders = !showColliders;
+        f1Pressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE) {
+        f1Pressed = false;
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -263,3 +497,4 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+

@@ -70,6 +70,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
         vertex.Position.x = mesh->mVertices[i].x;
         vertex.Position.y = mesh->mVertices[i].y;
         vertex.Position.z = mesh->mVertices[i].z;
+
         // 法线
         if (mesh->HasNormals()) {
             vertex.Normal.x = mesh->mNormals[i].x;
@@ -175,6 +176,24 @@ unsigned int TextureFromFile(const char* path, const std::string& directory)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
+        // ==========================================================
+        //  针对灰度图 (1通道) 和 灰度透明图 (2通道) 的颜色修正
+        // ==========================================================
+        if (format == GL_RED)
+        {
+            // 如果是单通道(R)，让 G 和 B 也等于 R
+            // 结果：红色 -> 灰色/白色
+            GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+            glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+        }
+        else if (format == GL_RG)
+        {
+            // 如果是双通道(R, G)，通常 R 是灰度，G 是透明度(Alpha)
+            // 我们让 G, B 都等于 R，但是让 Alpha 等于 G
+            GLint swizzleMask[] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+            glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+        }
+        // ==========================================================
         // ... 设置参数 ...
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

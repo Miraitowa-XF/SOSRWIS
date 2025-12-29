@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pond
+* source:	https://sketchfab.com/3d-models/pond-eb803a237b474027974d2d52cbe6c4a9
+* author:	kennedy.adams (https://sketchfab.com/kennedy.adams)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pond" (https://sketchfab.com/3d-models/pond-eb803a237b474027974d2d52cbe6c4a9) by kennedy.adams (https://sketchfab.com/kennedy.adams) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

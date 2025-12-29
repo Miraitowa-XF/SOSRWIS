@@ -1,0 +1,455 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2869,
+      "max": [
+        344.039794921875,
+        69.203857421875,
+        532.2373657226563
+      ],
+      "min": [
+        -423.4449768066406,
+        -62.4117317199707,
+        -508.49713134765625
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 34428,
+      "componentType": 5126,
+      "count": 2869,
+      "max": [
+        0.9994384050369263,
+        0.9988887906074524,
+        0.9984865784645081
+      ],
+      "min": [
+        -0.9998717308044434,
+        -0.9999263286590576,
+        -0.9994931221008301
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2869,
+      "max": [
+        0.9705383777618408,
+        0.9705383777618408
+      ],
+      "min": [
+        0.029461652040481567,
+        0.029461652040481567
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 12768,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 68856,
+      "componentType": 5126,
+      "count": 1306,
+      "max": [
+        321.184326171875,
+        76.45952606201172,
+        523.57861328125
+      ],
+      "min": [
+        -414.1130065917969,
+        14.351045608520508,
+        -491.89996337890625
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 84528,
+      "componentType": 5126,
+      "count": 1306,
+      "max": [
+        0.9168087840080261,
+        0.9988887906074524,
+        0.924875020980835
+      ],
+      "min": [
+        -0.924042284488678,
+        -0.9897547364234924,
+        -0.9420369267463684
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 22952,
+      "componentType": 5126,
+      "count": 1306,
+      "max": [
+        0.9705383777618408,
+        0.9705383777618408
+      ],
+      "min": [
+        0.029461652040481567,
+        0.7352692484855652
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 51072,
+      "componentType": 5125,
+      "count": 4704,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 100200,
+      "componentType": 5126,
+      "count": 115,
+      "max": [
+        273.1585693359375,
+        7.448097229003906,
+        442.9985046386719
+      ],
+      "min": [
+        -339.5775451660156,
+        7.448097229003906,
+        -445.70941162109375
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 101580,
+      "componentType": 5126,
+      "count": 115,
+      "max": [
+        5.517959422718377e-09,
+        1.0,
+        0.0
+      ],
+      "min": [
+        -5.5179638636104755e-09,
+        1.0,
+        0.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 33400,
+      "componentType": 5126,
+      "count": 115,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 69888,
+      "componentType": 5125,
+      "count": 480,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "kennedy.adams (https://sketchfab.com/kennedy.adams)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/pond-eb803a237b474027974d2d52cbe6c4a9",
+      "title": "Pond"
+    },
+    "generator": "Sketchfab-12.64.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 71808,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 34320,
+      "byteOffset": 71808,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 102960,
+      "byteOffset": 106128,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 209088,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/ice.001_baseColor.png"
+    },
+    {
+      "uri": "textures/ice.001_metallicRoughness.png"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "rocks",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.106535,
+          0.106535,
+          0.106535,
+          1.0
+        ],
+        "metallicFactor": 0.0
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "snow",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8,
+          0.8,
+          0.8,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.8211145618000169
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "ice.001",
+      "occlusionTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "roughnessFactor": 0.8211145618000169
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "rocks_rocks_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "rocks_snow_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "pond_ice.001_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 9,
+            "POSITION": 8,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        2.220446049250313e-16,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        -1.0,
+        4.930380657631324e-32,
+        -2.220446049250313e-16,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        70.66703033447266,
+        3.3322963935737346e-14,
+        -150.0732879638672,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "4ba8292110d64b67b598c698a958248b.fbx"
+    },
+    {
+      "children": [
+        3,
+        6
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        18.87507438659668,
+        -122.23981475830078,
+        1.0
+      ],
+      "name": "rocks"
+    },
+    {
+      "mesh": 0,
+      "name": "rocks_rocks_0"
+    },
+    {
+      "mesh": 1,
+      "name": "rocks_snow_0"
+    },
+    {
+      "children": [
+        7
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        18.87507438659668,
+        -122.23981475830078,
+        1.0
+      ],
+      "name": "pond"
+    },
+    {
+      "mesh": 2,
+      "name": "pond_ice.001_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    }
+  ]
+}
