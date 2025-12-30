@@ -4,11 +4,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// ÒıÈëÎÒÃÇµÄºËĞÄ¿â
+// å¼•å…¥æˆ‘ä»¬çš„æ ¸å¿ƒåº“
 #include "Core/Shader.h"
 #include "Core/Camera.h"
 #include "Core/Collision.h"
-#include "Renderer/Model.h" // <--- ¡¾ĞÂÔö¡¿ÒıÈëÄ£ĞÍÀà
+#include "Renderer/Model.h" // <--- ã€æ–°å¢ã€‘å¼•å…¥æ¨¡å‹ç±»
 #include "Renderer/Skybox.h"
 
 #include <iostream>
@@ -18,66 +18,66 @@
 unsigned int planeVAO, planeVBO;
 unsigned int snowTexture;
 
-// --- È«¾Ö±äÁ¿ ---
+// --- å…¨å±€å˜é‡ ---
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
-// ¡¾±£Áô¡¿ÉãÏñ»úÏµÍ³
-Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // ³õÊ¼Î»ÖÃµÄÈ·¶¨
+// ã€ä¿ç•™ã€‘æ‘„åƒæœºç³»ç»Ÿ
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // åˆå§‹ä½ç½®çš„ç¡®å®š
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// Ôö¼ÓÒ»¸ö·À¶¶¶¯±äÁ¿
+// å¢åŠ ä¸€ä¸ªé˜²æŠ–åŠ¨å˜é‡
 bool tabPressed = false;
 
-bool showColliders = false; // ÊÇ·ñÏÔÊ¾¿ÕÆøÇ½
+bool showColliders = false; // æ˜¯å¦æ˜¾ç¤ºç©ºæ°”å¢™
 unsigned int debugCubeVAO = 0, debugCubeVBO = 0;
 
-// ¡¾ĞÂÔö¡¿¶¨ÒåÒ»¸ö½á¹¹Ìå£¬ÓÃÀ´¹ÜÀí³¡¾°ÀïµÄÃ¿Ò»¸öÎïÌå
+// ã€æ–°å¢ã€‘å®šä¹‰ä¸€ä¸ªç»“æ„ä½“ï¼Œç”¨æ¥ç®¡ç†åœºæ™¯é‡Œçš„æ¯ä¸€ä¸ªç‰©ä½“
 struct SceneObject {
-    Model* model;       // Ä£ĞÍÖ¸Õë
-    glm::vec3 position; // Î»ÖÃ
-    glm::vec3 scale;    // Ëõ·Å
-    float rotationAngle; // Ğı×ª½Ç¶È (¶È)
-    glm::vec3 rotationAxis; // Ğı×ªÖá
+    Model* model;       // æ¨¡å‹æŒ‡é’ˆ
+    glm::vec3 position; // ä½ç½®
+    glm::vec3 scale;    // ç¼©æ”¾
+    float rotationAngle; // æ—‹è½¬è§’åº¦ (åº¦)
+    glm::vec3 rotationAxis; // æ—‹è½¬è½´
 
     SceneObject(Model* m, glm::vec3 pos, glm::vec3 s, float rot, glm::vec3 axis)
         : model(m), position(pos), scale(s), rotationAngle(rot), rotationAxis(axis) {
     }
 };
 
-// ¡¾ĞÂÔö¡¿´æ´¢ËùÓĞ³¡¾°¶ÔÏóµÄÁĞ±í
+// ã€æ–°å¢ã€‘å­˜å‚¨æ‰€æœ‰åœºæ™¯å¯¹è±¡çš„åˆ—è¡¨
 std::vector<SceneObject> allObjects;
 
-// ¡¾ĞÂÔö¡¿´æ´¢ËùÓĞÕÏ°­ÎïµÄÅö×²ºĞÁĞ±í
+// ã€æ–°å¢ã€‘å­˜å‚¨æ‰€æœ‰éšœç¢ç‰©çš„ç¢°æ’ç›’åˆ—è¡¨
 std::vector<AABB> sceneColliders;
 
-// »Øµ÷º¯ÊıÉùÃ÷
+// å›è°ƒå‡½æ•°å£°æ˜
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-// ¡¾ĞÂÔö¡¿ÊÖ¶¯Ìí¼ÓÒ»¸öÕÏ°­Îï (¿ÕÆøÇ½)
-// center: ºĞ×ÓµÄÖĞĞÄ×ø±ê
-// size: ºĞ×ÓµÄ³¤¿í¸ß (ÀıÈç: vec3(10.0f, 5.0f, 1.0f) ´ú±íÒ»Ãæ 10Ã×¿í¡¢1Ã×ºñµÄÇ½)
+// ã€æ–°å¢ã€‘æ‰‹åŠ¨æ·»åŠ ä¸€ä¸ªéšœç¢ç‰© (ç©ºæ°”å¢™)
+// center: ç›’å­çš„ä¸­å¿ƒåæ ‡
+// size: ç›’å­çš„é•¿å®½é«˜ (ä¾‹å¦‚: vec3(10.0f, 5.0f, 1.0f) ä»£è¡¨ä¸€é¢ 10ç±³å®½ã€1ç±³åšçš„å¢™)
 void addInvisibleWall(glm::vec3 center, glm::vec3 size) {
     glm::vec3 halfSize = size * 0.5f;
     glm::vec3 min = center - halfSize;
     glm::vec3 max = center + halfSize;
 
-    // Ö±½Ó¼ÓÈëÅö×²ÁĞ±í
+    // ç›´æ¥åŠ å…¥ç¢°æ’åˆ—è¡¨
     sceneColliders.push_back(AABB(min, max));
 }
 
-// ÔÚ¿Õ¼äÖĞ½¨Á¢²Î¿¼Á¢·½Ìå£¨ÓÃÓÚ¿ÉÊÓ»¯Ìí¼ÓÅö×²ºĞ×Ó£©
+// åœ¨ç©ºé—´ä¸­å»ºç«‹å‚è€ƒç«‹æ–¹ä½“ï¼ˆç”¨äºå¯è§†åŒ–æ·»åŠ ç¢°æ’ç›’å­ï¼‰
 void initDebugCube() {
     float vertices[] = {
-        // Ö»ĞèÒªÒ»¸öµ¥Î»Á¢·½ÌåµÄ¶¥µã (0,0,0) µ½ (1,1,1) »òÕß (-0.5,-0.5,-0.5) µ½ (0.5,0.5,0.5)
-        // ÕâÀïÓÃ -0.5 µ½ 0.5 ·½±ãËõ·Å
+        // åªéœ€è¦ä¸€ä¸ªå•ä½ç«‹æ–¹ä½“çš„é¡¶ç‚¹ (0,0,0) åˆ° (1,1,1) æˆ–è€… (-0.5,-0.5,-0.5) åˆ° (0.5,0.5,0.5)
+        // è¿™é‡Œç”¨ -0.5 åˆ° 0.5 æ–¹ä¾¿ç¼©æ”¾
         -0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f,
          0.5f, -0.5f, -0.5f,  0.5f,  0.5f, -0.5f,
          0.5f,  0.5f, -0.5f, -0.5f,  0.5f, -0.5f,
@@ -102,9 +102,32 @@ void initDebugCube() {
     glEnableVertexAttribArray(0);
 }
 
+// å°è£…çš„ç»˜åˆ¶åœºæ™¯å‡½æ•°
+// å‚æ•°ï¼šå½“å‰ä½¿ç”¨çš„ Shader
+void drawScene(Shader& shader, const std::vector<SceneObject>& objects, Model& ground)
+{
+    // 1. ç»˜åˆ¶æ‰€æœ‰ç‰©ä½“
+    for (const auto& obj : objects)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, obj.position);
+        model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
+        model = glm::scale(model, obj.scale);
+        shader.setMat4("model", model);
+        obj.model->Draw(shader);
+    }
+
+    // 2. ç»˜åˆ¶åœ°é¢
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
+    model = glm::scale(model, glm::vec3(0.25f));
+    shader.setMat4("model", model);
+    ground.Draw(shader);
+}
+
 int main()
 {
-    // 1. ³õÊ¼»¯ GLFW (²»±ä)
+    // 1. åˆå§‹åŒ– GLFW (ä¸å˜)
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -127,14 +150,14 @@ int main()
     }
 
     glEnable(GL_DEPTH_TEST);
-    // ¡¾ĞÂÔö¡¿¿ªÆô»ìºÏ (½â¾ö²£Á§Í¸Ã÷)
+    // ã€æ–°å¢ã€‘å¼€å¯æ··åˆ (è§£å†³ç»ç’ƒé€æ˜)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // ¡¾ĞÂÔö¡¿¿ªÆôÃæÌŞ³ı (½â¾ö¶¯ÂşÄ£ĞÍºÚÉ«ÂÒÂë)
+    // ã€æ–°å¢ã€‘å¼€å¯é¢å‰”é™¤ (è§£å†³åŠ¨æ¼«æ¨¡å‹é»‘è‰²ä¹±ç )
     glEnable(GL_CULL_FACE);
 
-    // 2. ±àÒë Shader (²»±ä)
+    // 2. ç¼–è¯‘ Shader (ä¸å˜)
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 
 
@@ -148,15 +171,15 @@ int main()
         "assets/textures/skybox/pz.png",
         "assets/textures/skybox/nz.png"
     };
-    // ´´½¨ Skybox ¶ÔÏó
+    // åˆ›å»º Skybox å¯¹è±¡
     Skybox* skybox = new Skybox(faces);
 
-    // ¼ÓÔØÄ£ĞÍ×ÊÔ´
-    // ¼ÓÔØ GLTF Ä£ĞÍÇ°£¬Í¨³£½¨Òé¹Ø±Õ·­×ª£¬·ñÔòÎÆÀí»á·´
+    // åŠ è½½æ¨¡å‹èµ„æº
+    // åŠ è½½ GLTF æ¨¡å‹å‰ï¼Œé€šå¸¸å»ºè®®å…³é—­ç¿»è½¬ï¼Œå¦åˆ™çº¹ç†ä¼šå
     stbi_set_flip_vertically_on_load(false);
 
     std::cout << "Loading Model..." << std::endl;
-    // ÇëÈ·±£ assets/models/house/house.obj ´æÔÚ£¬·ñÔò³ÌĞò»á±¨´í
+    // è¯·ç¡®ä¿ assets/models/house/house.obj å­˜åœ¨ï¼Œå¦åˆ™ç¨‹åºä¼šæŠ¥é”™
     Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
     Model groundModel("assets/models/snow_floor/scene.gltf");
     Model snowmanModel("assets/models/snow_man/scene.gltf");
@@ -182,12 +205,12 @@ int main()
 
     initDebugCube();
     // =================================================================================
-    // ¡¾¹Ø¼ü²½Öè¡¿ÅäÖÃ³¡¾°¶ÔÏóÁĞ±í
-    // ÕâÀïÎÒÃÇ½«Ö®Ç°·ÖÉ¢ÔÚ while Ñ­»·ÀïµÄÓ²±àÂë²ÎÊıÍ³Ò»¹ÜÀí¡£
-    // ²ÎÊıË³Ğò£ºÄ£ĞÍÖ¸Õë, Î»ÖÃ, Ëõ·Å, Ğı×ª½Ç¶È, Ğı×ªÖá
+    // ã€å…³é”®æ­¥éª¤ã€‘é…ç½®åœºæ™¯å¯¹è±¡åˆ—è¡¨
+    // è¿™é‡Œæˆ‘ä»¬å°†ä¹‹å‰åˆ†æ•£åœ¨ while å¾ªç¯é‡Œçš„ç¡¬ç¼–ç å‚æ•°ç»Ÿä¸€ç®¡ç†ã€‚
+    // å‚æ•°é¡ºåºï¼šæ¨¡å‹æŒ‡é’ˆ, ä½ç½®, ç¼©æ”¾, æ—‹è½¬è§’åº¦, æ—‹è½¬è½´
     // =================================================================================
 
-    // 1. ·¿×Ó
+    // 1. æˆ¿å­
     allObjects.push_back(SceneObject(&houseModel, glm::vec3(0.0f, 3.0f, -40.0f), glm::vec3(2.5f), -90.0f, glm::vec3(0, 1, 0)));
     // 2. Jon Snow
     allObjects.push_back(SceneObject(&jonModel, glm::vec3(10.0f, 0.0f, -30.0f), glm::vec3(0.07f), 180.0f, glm::vec3(0, 1, 0)));
@@ -226,14 +249,50 @@ int main()
     // 19. Bus
     allObjects.push_back(SceneObject(&busModel, glm::vec3(-35.0f, 4.0f, 20.0f), glm::vec3(4.0f), 180.0f, glm::vec3(0, 1, 0)));
 
-    // (´ó¹¤³Ì)ÊÖ¶¯¶¨Òå²»¿ÉÍ¨ĞĞµÄÇøÓò
-    // ÄãĞèÒªÀûÓÃÖ®Ç°Ğ´µÄ¡°´òÓ¡×ø±ê¡±¹¦ÄÜ£¬×ßµ½Ç½±ß£¬¼ÇÏÂ×ø±ê£¬È»ºóÔÚÕâÀïĞ´´úÂë
-    // ÀıÈç£º¸ø·¿×ÓºóÃæ¼ÓÒ»¶Â¿ÕÆøÇ½
-    // ²ÎÊı£ºÖĞĞÄµã(0, 2, -45)£¬ ³ß´ç(¿í20£¬¸ß5£¬ºñ2)
+    // (å¤§å·¥ç¨‹)æ‰‹åŠ¨å®šä¹‰ä¸å¯é€šè¡Œçš„åŒºåŸŸ
+    // ä½ éœ€è¦åˆ©ç”¨ä¹‹å‰å†™çš„â€œæ‰“å°åæ ‡â€åŠŸèƒ½ï¼Œèµ°åˆ°å¢™è¾¹ï¼Œè®°ä¸‹åæ ‡ï¼Œç„¶ååœ¨è¿™é‡Œå†™ä»£ç 
+    // ä¾‹å¦‚ï¼šç»™æˆ¿å­åé¢åŠ ä¸€å µç©ºæ°”å¢™
+    // å‚æ•°ï¼šä¸­å¿ƒç‚¹(0, 2, -45)ï¼Œ å°ºå¯¸(å®½20ï¼Œé«˜5ï¼Œåš2)
     addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 
+    // ==========================================
+    // ã€æ–°å¢ã€‘é…ç½®é˜´å½±è´´å›¾ FBO
+    // ==========================================
+    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // åˆ†è¾¨ç‡è¶Šé«˜è¶Šæ¸…æ™°
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
 
-    // 4. äÖÈ¾Ñ­»·
+    // åˆ›å»ºæ·±åº¦çº¹ç†
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+    // è®¾ç½®çº¹ç†è¿‡æ»¤
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // è®¾ç½®çº¹ç†ç¯ç»• (é˜²æ­¢é˜´å½±ä»¥å¤–çš„åŒºåŸŸå˜é»‘)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    // ç»‘å®šåˆ° FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE); // ä¸éœ€è¦é¢œè‰²
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // åŠ è½½é˜´å½± Shader
+    Shader depthShader("assets/shaders/shadow_depth.vert", "assets/shaders/shadow_depth.frag");
+
+    // é…ç½®ä¸» Shader çš„é˜´å½±çº¹ç†æ§½ä½ (è®¾ä¸º 15ï¼Œé¿å¼€æ¨¡å‹è‡ªå¸¦çº¹ç†)
+    ourShader.use();
+    ourShader.setInt("shadowMap", 15);
+
+    // 4. æ¸²æŸ“å¾ªç¯
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -241,17 +300,17 @@ int main()
         lastFrame = currentFrame;
 
         // ==========================================
-        // ¡¾ĞÂÔö¡¿Åö×²¼ì²â»ØÍËÂß¼­
+        // ã€æ–°å¢ã€‘ç¢°æ’æ£€æµ‹å›é€€é€»è¾‘
         // ==========================================
-        glm::vec3 oldPosition = camera.Position; // 1. ±¸·İÎ»ÖÃ
+        glm::vec3 oldPosition = camera.Position; // 1. å¤‡ä»½ä½ç½®
 
-        // ´¦ÀíÊäÈë
+        // å¤„ç†è¾“å…¥
         processInput(window);
 
-        // 3. ¼ì²éÅö×² (½öÔÚ FPS Ä£Ê½ÏÂ)
+        // 3. æ£€æŸ¥ç¢°æ’ (ä»…åœ¨ FPS æ¨¡å¼ä¸‹)
         if (camera.FPS_Mode)
         {
-            // ¶¨ÒåÍæ¼ÒµÄÉíÌå´óĞ¡ (0.3¿í, 1.8¸ß)
+            // å®šä¹‰ç©å®¶çš„èº«ä½“å¤§å° (0.3å®½, 1.8é«˜)
             glm::vec3 playerHalfSize(0.3f, 0.9f, 0.3f);
             AABB playerBox(camera.Position - playerHalfSize, camera.Position + playerHalfSize);
 
@@ -264,96 +323,144 @@ int main()
             }
 
             if (hit) {
-                // ×²Ç½ÁË£¡»ØÍË£¡
+                // æ’å¢™äº†ï¼å›é€€ï¼
                 camera.Position = oldPosition;
             }
 
-            // Ëø¶¨¸ß¶È (Ä£ÄâÔÚµØÃæĞĞ×ß)
-            camera.Position.y = 3.0f; // ÕâÀïµÄ 3.0 ÊÇÄãÉè¶¨µÄÑÛ¾¦¸ß¶È
+            // é”å®šé«˜åº¦ (æ¨¡æ‹Ÿåœ¨åœ°é¢è¡Œèµ°)
+            camera.Position.y = 3.0f; // è¿™é‡Œçš„ 3.0 æ˜¯ä½ è®¾å®šçš„çœ¼ç›é«˜åº¦
         }
         // ==========================================
 
-        // Ã¿Ö¡¸üĞÂÏà»ú£¨°ÑÊó±êÄ¿±ê½Ç¶ÈÓ¦ÓÃ²¢Æ½»¬£©
+        // æ¯å¸§æ›´æ–°ç›¸æœºï¼ˆæŠŠé¼ æ ‡ç›®æ ‡è§’åº¦åº”ç”¨å¹¶å¹³æ»‘ï¼‰
         camera.Update(deltaTime);
 
-        //// ¿ÉÑ¡£ºµ±Äã¾õµÃÏìÓ¦³Ù¶ÛÊ±£¬¶ÌÊ±Ìá¸ßËÙ¶È
+        //// å¯é€‰ï¼šå½“ä½ è§‰å¾—å“åº”è¿Ÿé’æ—¶ï¼ŒçŸ­æ—¶æé«˜é€Ÿåº¦
         camera.RotationSmoothSpeed = 15.0f;
         camera.MouseSensitivity = 0.8f;
 
-        // ÇåÆÁ
+        // æ¸…å±
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ourShader.use();
 
-        // ÉèÖÃ¹âÕÕºÍÏà»ú¾ØÕó
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) ´ú±í´¿°×É«¹â¡£
-		ourShader.setVec3("lightPos", glm::vec3(1.0f, 5.0f, 2.0f));         // ¹âÔ´Î»ÖÃ
+  //      // è®¾ç½®å…‰ç…§å’Œç›¸æœºçŸ©é˜µ
+  //      ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) ä»£è¡¨çº¯ç™½è‰²å…‰ã€‚
+		//ourShader.setVec3("lightPos", glm::vec3(0.0f, 20.0f, 0.0f));         // å…‰æºä½ç½®
+  //      ourShader.setVec3("viewPos", camera.Position);
+
+
+        // å®šä¹‰å…‰æºä½ç½® (éœ€è¦å›ºå®šï¼Œä¸èƒ½ä¹±è·‘)
+        glm::vec3 lightPos(10.0f, 20.0f, 10.0f); // æ¨¡æ‹Ÿå¤ªé˜³ï¼Œæ”¾é«˜ä¸€ç‚¹
+
+        // ============================================================
+        // 1. ç¬¬ä¸€éæ¸²æŸ“ï¼šä»å…‰æºè§†è§’ç”Ÿæˆæ·±åº¦å›¾ (Shadow Pass)
+        // ============================================================
+
+        // è®¡ç®—å…‰ç©ºé—´çŸ©é˜µ (æ­£äº¤æŠ•å½±é€‚åˆå®šå‘å…‰/å¤ªé˜³å…‰)
+        float near_plane = 1.0f, far_plane = 100.0f;
+        // ä¸‹é¢çš„å‚æ•°å†³å®šäº†é˜´å½±è¦†ç›–çš„èŒƒå›´ï¼Œå¤ªå°ä¼šå¯¼è‡´è¿œå¤„æ²¡å½±å­ï¼Œå¤ªå¤§å¯¼è‡´å½±å­æ¨¡ç³Š
+        glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        depthShader.use();
+        depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT); // åˆ‡æ¢åˆ°é˜´å½±å›¾åˆ†è¾¨ç‡
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // ã€æŠ€å·§ã€‘æ¸²æŸ“é˜´å½±æ—¶ä½¿ç”¨æ­£é¢å‰”é™¤ï¼Œå¯ä»¥æå¤§å‡å°‘â€œé˜´å½±æ‚¬æµ®â€é—®é¢˜
+        glCullFace(GL_FRONT);
+
+        // è°ƒç”¨æˆ‘ä»¬æå–å‡ºæ¥çš„ç»˜åˆ¶å‡½æ•°
+        drawScene(depthShader, allObjects, groundModel);
+
+        glCullFace(GL_BACK); // æ”¹å›èƒŒé¢å‰”é™¤
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // ã€æŠ€å·§ã€‘æ¸²æŸ“é˜´å½±æ—¶ä½¿ç”¨æ­£é¢å‰”é™¤ï¼Œå¯ä»¥æå¤§å‡å°‘â€œé˜´å½±æ‚¬æµ®â€é—®é¢˜
+        glCullFace(GL_FRONT);
+
+        // è°ƒç”¨æˆ‘ä»¬æå–å‡ºæ¥çš„ç»˜åˆ¶å‡½æ•°
+        drawScene(depthShader, allObjects, groundModel);
+
+        glCullFace(GL_BACK); // æ”¹å›èƒŒé¢å‰”é™¤
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // ============================================================
+        // 2. ç¬¬äºŒéæ¸²æŸ“ï¼šæ­£å¸¸ç»˜åˆ¶åœºæ™¯ (Render Pass)
+        // ============================================================
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT); // æ¢å¤å±å¹•åˆ†è¾¨ç‡
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ourShader.use();
+
+        // ä¼ é€’å…‰ç…§å‚æ•°
+        ourShader.setVec3("lightColor", glm::vec3(1.0f));
+        ourShader.setVec3("lightPos", lightPos);
         ourShader.setVec3("viewPos", camera.Position);
+        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); // ä¼ ç»™ Shader ç®—åæ ‡
+
+        // ç»‘å®šé˜´å½±è´´å›¾åˆ° 15 å·æ§½
+        glActiveTexture(GL_TEXTURE15);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
             0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
 
-        // ÕâÀï GetViewMatrix()
+        // è¿™é‡Œ GetViewMatrix()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        // =======================================================
-        // ¡¾¹Ø¼ü²½Öè¡¿×Ô¶¯äÖÈ¾ËùÓĞ¶ÔÏó
-        // ÕâÀïµÄÑ­»·Ìæ´úÁËÄãÖ®Ç°ÄÇ¼¸°ÙĞĞÖØ¸´µÄ draw ´úÂë
-        // =======================================================
-        for (const auto& obj : allObjects)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, obj.position);
-            model = glm::rotate(model, glm::radians(obj.rotationAngle), obj.rotationAxis);
-            model = glm::scale(model, obj.scale);
+        // ç»˜åˆ¶åœºæ™¯
+        drawScene(ourShader, allObjects, groundModel);
 
-            ourShader.setMat4("model", model);
-            obj.model->Draw(ourShader);
-        }
-
-        // µØÃæ (Íâ²¿Ä£ĞÍ) 
+        // åœ°é¢ (å¤–éƒ¨æ¨¡å‹) 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(25.0f, 0.0f, -25.0f));
         model = glm::scale(model, glm::vec3(0.25f));
         ourShader.setMat4("model", model);
         groundModel.Draw(ourShader);
 
-        // »æÖÆÌì¿ÕºĞ£¨×¢Òâ£ºSkybox::Draw Ê¹ÓÃµÄÊÇÃ»ÓĞÆ½ÒÆµÄ view£©
+        // ç»˜åˆ¶å¤©ç©ºç›’ï¼ˆæ³¨æ„ï¼šSkybox::Draw ä½¿ç”¨çš„æ˜¯æ²¡æœ‰å¹³ç§»çš„ viewï¼‰
         skybox->Draw(view, projection);
 
-        // »æÖÆ¿ÕÆøÇ½
+        // ç»˜åˆ¶ç©ºæ°”å¢™
         if (showColliders) {
-            // Ê¹ÓÃÏß¿òÄ£Ê½
+            // ä½¿ç”¨çº¿æ¡†æ¨¡å¼
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-            // ÕâÀï¿ÉÒÔÊ¹ÓÃÒ»¸ö¼òµ¥µÄ´¿É« shader£¬»òÕß¸´ÓÃ ourShader µ«ºöÂÔÎÆÀí
-            // ÎªÁË¼òµ¥£¬ÎÒÃÇ¸´ÓÃ ourShader£¬µ«ĞèÒªÒ»¸ö´¿°×ÎÆÀí£¨ÄãÖ®Ç°ÔÚ Model.cpp ÀïĞ´µÄ GetDefaultWhiteTexture ºÜÓĞÓÃ£©
-            // »òÕß¼òµ¥´Ö±©µØÀûÓÃ basic.frag µÄÌØĞÔ£¨Èç¹ûÃ»ÓĞ°ó¶¨²ÄÖÊ£¬¿ÉÄÜ»á±äºÚ£¬µ«Ïß¿òÄÜ¿´Çå¾ÍĞĞ£©
+            // è¿™é‡Œå¯ä»¥ä½¿ç”¨ä¸€ä¸ªç®€å•çš„çº¯è‰² shaderï¼Œæˆ–è€…å¤ç”¨ ourShader ä½†å¿½ç•¥çº¹ç†
+            // ä¸ºäº†ç®€å•ï¼Œæˆ‘ä»¬å¤ç”¨ ourShaderï¼Œä½†éœ€è¦ä¸€ä¸ªçº¯ç™½çº¹ç†ï¼ˆä½ ä¹‹å‰åœ¨ Model.cpp é‡Œå†™çš„ GetDefaultWhiteTexture å¾ˆæœ‰ç”¨ï¼‰
+            // æˆ–è€…ç®€å•ç²—æš´åœ°åˆ©ç”¨ basic.frag çš„ç‰¹æ€§ï¼ˆå¦‚æœæ²¡æœ‰ç»‘å®šæè´¨ï¼Œå¯èƒ½ä¼šå˜é»‘ï¼Œä½†çº¿æ¡†èƒ½çœ‹æ¸…å°±è¡Œï¼‰
 
             ourShader.use();
-            ourShader.setVec3("lightColor", glm::vec3(1.0f)); // È·±£¹»ÁÁ
+            ourShader.setVec3("lightColor", glm::vec3(1.0f)); // ç¡®ä¿å¤Ÿäº®
 
             glBindVertexArray(debugCubeVAO);
 
             for (const auto& box : sceneColliders) {
-                // ¼ÆËãÖĞĞÄµãºÍ´óĞ¡
+                // è®¡ç®—ä¸­å¿ƒç‚¹å’Œå¤§å°
                 glm::vec3 size = box.max - box.min;
                 glm::vec3 center = box.min + size * 0.5f;
 
                 glm::mat4 model = glm::mat4(1.0f);
                 model = glm::translate(model, center);
-                model = glm::scale(model, size); // Ëõ·Å³ÉºĞ×Ó´óĞ¡
+                model = glm::scale(model, size); // ç¼©æ”¾æˆç›’å­å¤§å°
 
                 ourShader.setMat4("model", model);
-                // Ïß¿ò»æÖÆ
+                // çº¿æ¡†ç»˜åˆ¶
                 glDrawArrays(GL_LINES, 0, 24);
             }
 
-            // »Ö¸´Ìî³äÄ£Ê½
+            // æ¢å¤å¡«å……æ¨¡å¼
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
@@ -365,55 +472,55 @@ int main()
     return 0;
 }
 
-// ... ÏÂÃæÊÇËùÓĞµÄ»Øµ÷º¯Êı (processInput, mouse_callback µÈ) ...
+// ... ä¸‹é¢æ˜¯æ‰€æœ‰çš„å›è°ƒå‡½æ•° (processInput, mouse_callback ç­‰) ...
 void processInput(GLFWwindow* window)
 {
-    // 1. ESC ÍË³ö
+    // 1. ESC é€€å‡º
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // 2. TAB ÇĞ»»ÉãÏñ»úÄ£Ê½ (FPS <-> God Mode)
+    // 2. TAB åˆ‡æ¢æ‘„åƒæœºæ¨¡å¼ (FPS <-> God Mode)
     if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tabPressed)
     {
-        camera.FPS_Mode = !camera.FPS_Mode; // ÇĞ»»²¼¶ûÖµ
-        tabPressed = true; // Ëø¶¨£¬Ö±µ½ËÉ¿ª°´¼ü
+        camera.FPS_Mode = !camera.FPS_Mode; // åˆ‡æ¢å¸ƒå°”å€¼
+        tabPressed = true; // é”å®šï¼Œç›´åˆ°æ¾å¼€æŒ‰é”®
 
-        // ´òÓ¡ÌáÊ¾£¬·½±ãµ÷ÊÔ
+        // æ‰“å°æç¤ºï¼Œæ–¹ä¾¿è°ƒè¯•
         if (camera.FPS_Mode)
             std::cout << "Switched to: FPS Mode (Walking)" << std::endl;
         else
             std::cout << "Switched to: Free Mode (Flying)" << std::endl;
     }
-    // ËÉ¿ª TAB ¼üºó£¬½â³ıËø¶¨
+    // æ¾å¼€ TAB é”®åï¼Œè§£é™¤é”å®š
     if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
     {
         tabPressed = false;
     }
 
     // ============================================================
-    //  ¼ÇÂ¼ÒÆ¶¯Ç°µÄÎ»ÖÃ
+    //  è®°å½•ç§»åŠ¨å‰çš„ä½ç½®
     // ============================================================
     glm::vec3 oldPosition = camera.Position;
 
     // ============================================================
-    //  ±¼ÅÜ¿ØÖÆ (°´×¡ R ¼ü¼ÓËÙ)
+    //  å¥”è·‘æ§åˆ¶ (æŒ‰ä½ R é”®åŠ é€Ÿ)
     // ============================================================
-    // ¶¨ÒåÁ½ÖÖËÙ¶È
-    float normalSpeed = 5.0f;  // Õı³£×ßÂ·ËÙ¶È (ºÍ Camera.h ÀïµÄÄ¬ÈÏÖµÒ»ÖÂ)
-    float runSpeed = 10.0f; // ±¼ÅÜËÙ¶È (4±¶ËÙ£¬¾õµÃÂı¿ÉÒÔ¸Ä³É 20.0f)
-    // ¼ì²â°´¼ü
+    // å®šä¹‰ä¸¤ç§é€Ÿåº¦
+    float normalSpeed = 5.0f;  // æ­£å¸¸èµ°è·¯é€Ÿåº¦ (å’Œ Camera.h é‡Œçš„é»˜è®¤å€¼ä¸€è‡´)
+    float runSpeed = 10.0f; // å¥”è·‘é€Ÿåº¦ (4å€é€Ÿï¼Œè§‰å¾—æ…¢å¯ä»¥æ”¹æˆ 20.0f)
+    // æ£€æµ‹æŒ‰é”®
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
-        camera.MovementSpeed = runSpeed; // ¼ÓËÙ
+        camera.MovementSpeed = runSpeed; // åŠ é€Ÿ
     }
     else
     {
-        camera.MovementSpeed = normalSpeed; // »Ö¸´
+        camera.MovementSpeed = normalSpeed; // æ¢å¤
     }
     // ============================================================
 
-    // 3. »ù´¡ÒÆ¶¯ (WASD)
-    // ¾ßÌåµÄÒÆ¶¯Âß¼­£¨ÊÇ·É»¹ÊÇ×ß£©ÓÉ Camera ÀàÄÚ²¿µÄ FPS_Mode ±äÁ¿¾ö¶¨
+    // 3. åŸºç¡€ç§»åŠ¨ (WASD)
+    // å…·ä½“çš„ç§»åŠ¨é€»è¾‘ï¼ˆæ˜¯é£è¿˜æ˜¯èµ°ï¼‰ç”± Camera ç±»å†…éƒ¨çš„ FPS_Mode å˜é‡å†³å®š
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -423,17 +530,17 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
-    // 4. ´¹Ö±ÒÆ¶¯
-    // SPACE: ÉÏÉı
+    // 4. å‚ç›´ç§»åŠ¨
+    // SPACE: ä¸Šå‡
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         camera.ProcessKeyboard(UP, deltaTime);
 
-    // LEFT_CONTROL: ÏÂ½µ (Ìæ»»µôÁËÔ­À´µÄ LEFT_SHIFT)
+    // LEFT_CONTROL: ä¸‹é™ (æ›¿æ¢æ‰äº†åŸæ¥çš„ LEFT_SHIFT)
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
 
     // ============================================================
-    //  ¼ì²âÎ»ÖÃÊÇ·ñ¸Ä±ä£¬²¢´òÓ¡
+    //  æ£€æµ‹ä½ç½®æ˜¯å¦æ”¹å˜ï¼Œå¹¶æ‰“å°
     // ============================================================
     if (camera.Position != oldPosition)
     {
@@ -443,7 +550,7 @@ void processInput(GLFWwindow* window)
             << camera.Position.z << " ]" << std::endl;
     }
 
-    // ÇĞ»»Åö×²ºÍºĞ×ÓµÄ¿ÉÊÓ»¯£¬¶¨ÒåÒ»¸ö¾²Ì¬±äÁ¿·ÀÖ¹Á¬°´
+    // åˆ‡æ¢ç¢°æ’å’Œç›’å­çš„å¯è§†åŒ–ï¼Œå®šä¹‰ä¸€ä¸ªé™æ€å˜é‡é˜²æ­¢è¿æŒ‰
     static bool f1Pressed = false;
     if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS && !f1Pressed) {
         showColliders = !showColliders;
@@ -467,24 +574,24 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
         return;
     }
 
-    // Ô­Ê¼ÏñËØÆ«ÒÆ
+    // åŸå§‹åƒç´ åç§»
     float xoffset_px = xpos - lastX;
-    float yoffset_px = lastY - ypos; // ×¢Òâ y ·½ÏòÈ¡·´
+    float yoffset_px = lastY - ypos; // æ³¨æ„ y æ–¹å‘å–å
 
     lastX = xpos;
     lastY = ypos;
 
-    // ¹éÒ»»¯µ½ [-1, 1]£¬°´´°¿Ú³ß´ç£¨Ê¹ÓÃ framebuffer ´óĞ¡»á¸üÎÈ£©
+    // å½’ä¸€åŒ–åˆ° [-1, 1]ï¼ŒæŒ‰çª—å£å°ºå¯¸ï¼ˆä½¿ç”¨ framebuffer å¤§å°ä¼šæ›´ç¨³ï¼‰
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     float nx = xoffset_px / (float)fbWidth;   // -1 .. 1 (approx)
     float ny = yoffset_px / (float)fbHeight;  // -1 .. 1 (approx)
 
-    // ¿ÉÑ¡Õï¶Ï£ºÈ¡Ïû×¢ÊÍÒÔ¹Û²ìÊıÖµ£¨¶ÌÆÚ£©
+    // å¯é€‰è¯Šæ–­ï¼šå–æ¶ˆæ³¨é‡Šä»¥è§‚å¯Ÿæ•°å€¼ï¼ˆçŸ­æœŸï¼‰
     // static float acc=0; acc += 1.0f; if(acc>30){ acc=0; printf("px=(%.1f,%.1f) norm=(%.4f,%.4f)\n", xoffset_px, yoffset_px, nx, ny); }
 
-    // ½«¹éÒ»»¯Î»ÒÆ´«µİ¸ø Camera£»Camera ÄÚ²¿½«°ÑËüÓ³ÉäÎª½Ç¶È
-    // ÕâÀï´«Èë¹éÒ»»¯Öµ¶ø²»ÊÇÏñËØ
+    // å°†å½’ä¸€åŒ–ä½ç§»ä¼ é€’ç»™ Cameraï¼›Camera å†…éƒ¨å°†æŠŠå®ƒæ˜ å°„ä¸ºè§’åº¦
+    // è¿™é‡Œä¼ å…¥å½’ä¸€åŒ–å€¼è€Œä¸æ˜¯åƒç´ 
     camera.ProcessMouseMovementNormalized(nx, ny);
 }
 
