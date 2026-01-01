@@ -15,6 +15,9 @@
 #include <algorithm>  // for min/max logic inside main if needed
 #include "stb_image.h"
 
+// 下雪天气场景
+#include "Scene/Scene.h"
+
 unsigned int planeVAO, planeVBO;
 unsigned int snowTexture;
 
@@ -54,6 +57,12 @@ std::vector<SceneObject> allObjects;
 
 // 【新增】存储所有障碍物的碰撞盒列表
 std::vector<AABB> sceneColliders;
+
+//下雪场景
+SnowScene snowyScene;
+static double lastToggleTimeF = 0.0;
+static double toggleCooldown = 0.15;
+
 
 // 回调函数声明
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -101,6 +110,16 @@ void initDebugCube() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 }
+
+//初始化snowyscene
+void initSnowyScene()
+{
+    snowyScene.Init("assets/shaders/particle.vert", "assets/shaders/particle.frag", "assets/textures/snow/snowflake.png");
+    snowyScene.GetParticleSystem().SetSpawnRate(100.0f);
+	snowyScene.GetParticleSystem().SetWind(glm::vec3(0.2f, 0.0f, 0.1f));
+    snowyScene.GetParticleSystem().SetActive(false);
+}
+
 
 int main()
 {
@@ -232,6 +251,8 @@ int main()
     // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
     addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 
+	//下雪场景初始化
+	initSnowyScene();
 
     // 4. 渲染循环
     while (!glfwWindowShouldClose(window))
@@ -279,6 +300,9 @@ int main()
         //// 可选：当你觉得响应迟钝时，短时提高速度
         camera.RotationSmoothSpeed = 15.0f;
         camera.MouseSensitivity = 0.8f;
+
+		// 更新下雪场景
+		snowyScene.Update(deltaTime);
 
         // 清屏
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -356,6 +380,9 @@ int main()
             // 恢复填充模式
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+
+		// 绘制下雪场景,在不透明物体之后，假如Scene绘制
+		snowyScene.Render(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -452,7 +479,25 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_RELEASE) {
         f1Pressed = false;
     }
-}
+
+    //下雪开关 O/P
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        double t = glfwGetTime();
+        if(t - lastToggleTimeF > toggleCooldown) {
+            snowyScene.GetParticleSystem().SetActive(true);
+            lastToggleTimeF = t;
+            printf("Snow: ON\n");
+		}
+    }
+    if(glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        double t = glfwGetTime();
+        if(t - lastToggleTimeF > toggleCooldown) {
+            snowyScene.GetParticleSystem().SetActive(false);
+            lastToggleTimeF = t;
+			printf("Snow: OFF\n");
+        }
+    }
+}       
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
