@@ -17,6 +17,7 @@ public:
     glm::vec3 color;       // 太阳光的实时颜色
     float intensity;       // 光照强度
     float ambient;         // 环境光强度
+	bool isDay; 		 // 是否为白天(可选)
 
     // --- 系统接口 ---
     void Init(const char* vertPath, const char* fragPath);

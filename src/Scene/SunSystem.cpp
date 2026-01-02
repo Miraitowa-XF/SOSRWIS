@@ -154,52 +154,83 @@ void SunSystem::Init(const char* vertPath, const char* fragPath) {
 }
 
 void SunSystem::Update(float deltaTime, float timeSlider) {
-    // 轨迹计算
+    // 1. 计算太阳的原始轨迹 (0.0=午夜, 0.5=正午)
+    // angle: 0.0 -> -90度(下), 0.5 -> 90度(上)
     float angle = (timeSlider * 2.0f * 3.14159265f) - 1.570796f;
     float y = std::sin(angle);
     float z = std::cos(angle);
-    direction = glm::normalize(glm::vec3(0.0f, y, z));
-    worldPos = direction * 80.0f;
 
-    float height = direction.y; // 太阳高度 [-1, 1]
+    // 真实的太阳方向
+    glm::vec3 sunDir = glm::normalize(glm::vec3(0.0f, y, z));
+    float height = sunDir.y; // [-1, 1]
 
-    // --- 定义更真实的颜色点 ---
-    glm::vec3 colorNoon = glm::vec3(1.0f, 1.0f, 0.95f);  // 正午：暖白色（不是纯白，带一点点阳光感）
-    glm::vec3 colorGoldenHour = glm::vec3(1.0f, 0.85f, 0.5f);  // 晨/傍：金黄色（太阳升起一段距离后）
-    glm::vec3 colorSunset = glm::vec3(1.0f, 0.4f, 0.15f);  // 日出落：深橙红（地平线附近）
-    glm::vec3 colorDusk = glm::vec3(0.3f, 0.15f, 0.3f);  // 暮光：微紫/深红（刚落山或刚升起时天边的余晖）
-    glm::vec3 colorNight = glm::vec3(0.02f, 0.02f, 0.05f); // 深夜：极暗蓝黑色
+    // --- 定义颜色 ---
+    glm::vec3 colorNoon = glm::vec3(1.0f, 1.0f, 0.98f);   // 正午：亮白
+    glm::vec3 colorSunset = glm::vec3(1.0f, 0.45f, 0.1f);   // 日落：橙红
+    glm::vec3 colorDark = glm::vec3(0.02f, 0.02f, 0.05f); // 黑暗时刻：极暗蓝黑
+    glm::vec3 colorMoon = glm::vec3(0.6f, 0.7f, 1.0f);    // 月光：冷蓝白
 
-    if (height > 0.0f) {
-        // --- 白天逻辑 (高度 0.0 到 1.0) ---
-        if (height > 0.4f) {
-            // 中午时段：从金黄色过渡到暖白色 (height 0.4 -> 1.0)
-            float t = (height - 0.4f) / 0.6f;
-            color = glm::mix(colorGoldenHour, colorNoon, t);
-            intensity = 1.2f; // 正午光照最强
-        }
-        else if (height > 0.1f) {
-            // 上午/下午：从深橙红过渡到金黄色 (height 0.1 -> 0.4)
-            float t = (height - 0.1f) / 0.3f;
-            color = glm::mix(colorSunset, colorGoldenHour, t);
-            intensity = 0.8f + t * 0.4f;
+    // --- 状态机逻辑 ---
+
+    // 阈值定义：
+    // height > 0.1 : 白天
+    // height 0.1 ~ -0.1 : 黎明/黄昏 (光线快速变暗)
+    // height -0.1 ~ -0.3 : 至暗时刻 (太阳落下，月亮还没升起/刚落下)
+    // height < -0.3 : 深夜 (月亮高挂)
+
+    if (height > -0.15f) {
+        // === 白天 / 黄昏 模式 ===
+
+        // 设定位置为太阳位置
+        direction = sunDir;
+        worldPos = direction * 80.0f;
+
+        if (height > 0.1f) {
+            // 正常白天
+            float t = std::min((height - 0.1f) / 0.4f, 1.0f);
+            color = glm::mix(colorSunset, colorNoon, t);
+            intensity = 1.0f + t * 0.3f; // 1.0 ~ 1.3
+            ambient = 0.3f + t * 0.1f;   // 0.3 ~ 0.4
         }
         else {
-            // 日出/日落瞬间：从微紫余晖过渡到深橙红 (height 0.0 -> 0.1)
-            float t = height / 0.1f;
-            color = glm::mix(colorDusk, colorSunset, t);
-            intensity = 0.2f + t * 0.6f;
+            // 日出/日落过渡期 (height -0.15 ~ 0.1)
+            // 归一化 t: 0(最暗) ~ 1(日落色)
+            float t = (height + 0.15f) / 0.25f;
+            color = glm::mix(colorDark, colorSunset, t);
+
+            // 强度急速下降，制造"天黑了"的感觉
+            intensity = t * 0.8f;
+            ambient = 0.05f + t * 0.25f;
         }
-        ambient = 0.15f + height * 0.1f; // 环境光随高度增强
     }
     else {
-        // --- 晚上逻辑 (高度 -1.0 到 0.0) ---
-        // 模拟落山后的余晖消散
-        float nightT = glm::clamp(-height * 5.0f, 0.0f, 1.0f); // 快速进入黑夜
-        color = glm::mix(colorDusk, colorNight, nightT);
+        // === 深夜 / 月亮 模式 ===
 
-        intensity = 0.0f; // 晚上主光源关闭
-        ambient = glm::mix(0.15f, 0.03f, nightT); // 环境光随之变暗
+        // 关键逻辑：当太阳落到地平线以下很深时，我们让"光源"变成月亮
+        // 月亮位置通常在太阳对面 (-sunDir)
+
+        direction = -sunDir; // 反转方向
+        worldPos = direction * 80.0f;
+
+        // 计算月亮高度 (注意 height 是太阳高度，是负的，所以月亮高度是 -height)
+        float moonHeight = -height;
+
+        if (moonHeight > 0.3f) {
+            // 月亮高挂 (深夜)
+            color = colorMoon;
+            intensity = 0.3f; // 月光强度较低 (营造氛围，不要太亮)
+            ambient = 0.1f;   // 环境光冷且暗
+        }
+        else {
+            // 月出/月落过渡 (至暗时刻)
+            // 此时太阳刚下去，月亮还没完全上来，或者反之
+            float t = (moonHeight - 0.15f) / 0.15f; // 过渡
+            t = glm::clamp(t, 0.0f, 1.0f);
+
+            color = glm::mix(colorDark, colorMoon, t);
+            intensity = t * 0.3f;
+            ambient = 0.02f + t * 0.08f;
+        }
     }
 }
 

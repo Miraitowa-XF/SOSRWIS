@@ -36,6 +36,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+bool isLampOn = true; // 路灯默认开启
+bool lKeyPressed = false; // 按键防抖
 // 增加一个防抖动变量
 bool tabPressed = false;
 
@@ -68,7 +70,7 @@ static double toggleCooldown = 0.15;
 
 // 太阳系统
 SunSystem sunSystem;
-float dayTime = 0.5f;
+float dayTime = 0.0f; // 【修改】0.0 代表午夜 (00:00)，也就是程序启动就是黑夜
 
 
 // �ص���������
@@ -138,6 +140,9 @@ void initSunSystem()
 // 参数：当前使用的 Shader
 void drawScene(Shader& shader, const std::vector<SceneObject>& objects, Model& ground)
 {
+    // 绘制物体时关闭剔除，让树叶双面可见！
+    glDisable(GL_CULL_FACE);
+
     // 1. 绘制所有物体
     for (const auto& obj : objects)
     {
@@ -155,6 +160,9 @@ void drawScene(Shader& shader, const std::vector<SceneObject>& objects, Model& g
     model = glm::scale(model, glm::vec3(0.25f));
     shader.setMat4("model", model);
     ground.Draw(shader);
+
+    // 画完可以开回来，或者就一直关着也行
+    glEnable(GL_CULL_FACE);
 }
 
 int main()
@@ -165,7 +173,11 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    // 开启 4 倍抗锯齿
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SOSRWIS - Snowy Scene", NULL, NULL);
+
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -188,6 +200,9 @@ int main()
 
     // 【新增】开启面剔除 (解决动漫模型黑色乱码)
     glEnable(GL_CULL_FACE);
+
+    // 启用多重采样
+    glEnable(GL_MULTISAMPLE);
 
     // 2. 编译 Shader (不变)
     Shader ourShader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
@@ -216,7 +231,7 @@ int main()
     Model groundModel("assets/models/snow_floor/scene.gltf");
     Model snowmanModel("assets/models/snow_man/scene.gltf");
 	Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
-	Model treesModel("assets/models/newtrees/newtrees.gltf");
+	Model treesModel("assets/models/newtrees/scene.gltf");
 	Model wellModel("assets/models/old_well/scene.gltf");
 	Model containerModel("assets/models/rusty_container/scene.gltf");
 	Model busModel("assets/models/bus/scene.gltf");
@@ -280,6 +295,12 @@ int main()
     allObjects.push_back(SceneObject(&containerModel, glm::vec3(-25.0f, 0.0f, 20.0f), glm::vec3(3.0f), 90.0f, glm::vec3(0, 1, 0)));
     // 19. Bus
     allObjects.push_back(SceneObject(&busModel, glm::vec3(-35.0f, 4.0f, 20.0f), glm::vec3(4.0f), 180.0f, glm::vec3(0, 1, 0)));
+    // 喷泉旁边的路灯
+    allObjects.push_back(SceneObject(&lampModel, glm::vec3(-8.0f, 0.0f, -12.0f), glm::vec3(2.0f), 45.0f, glm::vec3(0, 1, 0)));
+    // 3. 【新】长椅路灯
+    allObjects.push_back(SceneObject(&lampModel, glm::vec3(22.0f, 0.0f, 10.0f), glm::vec3(2.0f), -45.0f, glm::vec3(0, 1, 0)));
+    // 4. 【新】村庄路灯
+    allObjects.push_back(SceneObject(&lampModel, glm::vec3(6.0f, 0.0f, -40.0f), glm::vec3(2.0f), 135.0f, glm::vec3(0, 1, 0)));
 
     // (大工程)手动定义不可通行的区域
     // 你需要利用之前写的“打印坐标”功能，走到墙边，记下坐标，然后在这里写代码
@@ -407,9 +428,9 @@ int main()
         // ============================================================
 
         // 计算光空间矩阵 (正交投影适合定向光/太阳光)
-        float near_plane = 1.0f, far_plane = 100.0f;
+        float near_plane = 1.0f, far_plane = 300.0f;
         // 下面的参数决定了阴影覆盖的范围，太小会导致远处没影子，太大导致影子模糊
-        glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+        glm::mat4 lightProjection = glm::ortho(-80.0f, 80.0f, -80.0f, 80.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0)); // 使用 sunSystem.worldPos 作为 lightPos 计算 lightSpaceMatrix
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
@@ -448,11 +469,40 @@ int main()
 
         ourShader.use();
 
-        // 传递光照参数
-        /*ourShader.setVec3("lightColor", glm::vec3(1.0f));
-        ourShader.setVec3("lightPos", lightPos);
-        ourShader.setVec3("viewPos", camera.Position);
-        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); */// 传给 Shader 算坐标
+        // ===========================================
+        // 【升级】传递 4 盏路灯的参数
+        // ===========================================
+
+        // 灯泡的偏移高度 (灯杆高 2.0 倍，灯泡大概在 7.0 高度)
+        float lampHeightOffset = 7.0f;
+
+        // 定义 4 盏灯的底座坐标 (跟上面添加模型的坐标保持一致)
+        glm::vec3 lampPositions[] = {
+            glm::vec3(-17.0f, 0.0f, 15.0f),  // 1. 原路灯
+            glm::vec3(-8.0f, 0.0f, -12.0f),  // 2. 喷泉路灯
+            glm::vec3(22.0f, 0.0f, 10.0f),   // 3. 长椅路灯
+            glm::vec3(6.0f, 0.0f, -40.0f)  // 4. 村庄路灯
+        };
+
+        // 循环传递数组给 Shader
+        for (int i = 0; i < 4; i++)
+        {
+            std::string number = std::to_string(i);
+
+            // 位置：底座坐标 + 高度偏移
+            ourShader.setVec3("pointLights[" + number + "].position", lampPositions[i] + glm::vec3(0.0f, lampHeightOffset, 0.0f));
+
+            // 颜色：暖黄光
+            ourShader.setVec3("pointLights[" + number + "].color", glm::vec3(1.0f, 0.8f, 0.4f));
+
+            // 衰减参数 (覆盖范围约 50 米)
+            ourShader.setFloat("pointLights[" + number + "].constant", 1.0f);
+            ourShader.setFloat("pointLights[" + number + "].linear", 0.09f);
+            ourShader.setFloat("pointLights[" + number + "].quadratic", 0.032f);
+        }
+
+        // 总开关 (受 L 键控制)
+        ourShader.setBool("lampOn", isLampOn);
         
         // 太阳系统
         // 将太阳的实时数据传给场景物体的着色器
@@ -470,7 +520,7 @@ int main()
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
-            0.1f, 100.0f);
+            0.1f, 300.0f);
         ourShader.setMat4("projection", projection);
 
         // 这里 GetViewMatrix()
@@ -685,6 +735,19 @@ void processInput(GLFWwindow* window)
         // \r 是回车符，可以让输出在同一行刷新，不会刷屏
         printf("\rCurrent Simulation Time: [%02d:%02d] (dayTime: %.4f)", hours, minutes, dayTime);
         fflush(stdout); // 强制刷新缓冲区，确保实时显示
+    }
+
+    // 【新增】按 'L' 键切换路灯
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lKeyPressed)
+    {
+        isLampOn = !isLampOn;
+        lKeyPressed = true;
+        if (isLampOn) std::cout << "Street Lamp: ON" << std::endl;
+        else std::cout << "Street Lamp: OFF" << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
+    {
+        lKeyPressed = false;
     }
 }       
 
