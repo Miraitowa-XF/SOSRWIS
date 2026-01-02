@@ -12,10 +12,12 @@ uniform sampler2D texture_diffuse1;
 // 【新增】深度贴图（阴影图）
 uniform sampler2D shadowMap; 
 
-// 光照参数
-uniform vec3 lightPos;
+// 动态太阳参数
+uniform vec3 lightPos;           // 太阳光的方向向量
+uniform vec3 lightColor;         // 太阳的实时颜色
+uniform float sunIntensity;    // 太阳的实时强度
+uniform float ambientStrength; // 实时环境光
 uniform vec3 viewPos;
-uniform vec3 lightColor;
 
 // ==========================================================
 // 阴影计算函数
@@ -76,21 +78,21 @@ void main()
 
     // 2. 环境光 (Ambient) 
     // 这是不管有没有影子都能照亮的部分
-    float ambientStrength = 0.4; 
+    // float ambientStrength = 0.4; 
     vec3 ambient = ambientStrength * lightColor;
   
     // 3. 漫反射 (Diffuse)
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    vec3 diffuse = diff * sunIntensity * lightColor;
     
     // 4. 镜面反射 (Specular)
     float specularStrength = 0.2; // 稍微调低一点，避免塑料感太强
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColor;  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); 
+    vec3 specular = specularStrength * spec * sunIntensity * lightColor;
     
     // ==========================================================
     // 阴影应用

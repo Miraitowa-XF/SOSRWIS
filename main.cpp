@@ -18,6 +18,9 @@
 // ��ѩ��������
 #include "Scene/Scene.h"
 
+// 太阳系统
+#include "Scene/SunSystem.h"
+
 unsigned int planeVAO, planeVBO;
 unsigned int snowTexture;
 
@@ -62,6 +65,10 @@ std::vector<AABB> sceneColliders;
 SnowScene snowyScene;
 static double lastToggleTimeF = 0.0;
 static double toggleCooldown = 0.15;
+
+// 太阳系统
+SunSystem sunSystem;
+float dayTime = 0.5f;
 
 
 // �ص���������
@@ -119,6 +126,12 @@ void initSnowyScene()
     snowyScene.GetParticleSystem().SetSpawnRate(100.0f);
 	snowyScene.GetParticleSystem().SetWind(glm::vec3(0.2f, 0.0f, 0.1f));
     snowyScene.GetParticleSystem().SetActive(false);
+}
+
+// 太阳系统
+void initSunSystem()
+{
+    sunSystem.Init("assets/shaders/sun.vert", "assets/shaders/sun.frag");
 }
 
 // 封装的绘制场景函数
@@ -277,6 +290,9 @@ int main()
 	  //��ѩ������ʼ��
 	  initSnowyScene();
 
+    // 太阳系统
+      initSunSystem();
+
     // 4. ��Ⱦѭ��
     // ==========================================
     // 【新增】配置阴影贴图 FBO
@@ -369,6 +385,9 @@ int main()
         // 更新下雪粒子 (必须在每一帧开始时做)
 		    snowyScene.Update(deltaTime);
 
+        // 太阳系统
+        sunSystem.Update(deltaTime, dayTime);
+
         ourShader.use();
 
   //      // 设置光照和相机矩阵
@@ -377,8 +396,11 @@ int main()
   //      ourShader.setVec3("viewPos", camera.Position);
 
 
-        // 定义光源位置 (需要固定，不能乱跑)
-        glm::vec3 lightPos(10.0f, 20.0f, 10.0f); // 模拟太阳，放高一点
+        //// 定义光源位置 (需要固定，不能乱跑)
+        //glm::vec3 lightPos(10.0f, 20.0f, 10.0f); // 模拟太阳，放高一点
+
+        // 太阳系统
+        glm::vec3 lightPos = sunSystem.worldPos;
 
         // ============================================================
         // 1. 第一遍渲染：从光源视角生成深度图 (Shadow Pass)
@@ -388,7 +410,7 @@ int main()
         float near_plane = 1.0f, far_plane = 100.0f;
         // 下面的参数决定了阴影覆盖的范围，太小会导致远处没影子，太大导致影子模糊
         glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-        glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0)); // 使用 sunSystem.worldPos 作为 lightPos 计算 lightSpaceMatrix
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
         depthShader.use();
@@ -427,10 +449,20 @@ int main()
         ourShader.use();
 
         // 传递光照参数
-        ourShader.setVec3("lightColor", glm::vec3(1.0f));
+        /*ourShader.setVec3("lightColor", glm::vec3(1.0f));
         ourShader.setVec3("lightPos", lightPos);
         ourShader.setVec3("viewPos", camera.Position);
-        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); // 传给 Shader 算坐标
+        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); */// 传给 Shader 算坐标
+        
+        // 太阳系统
+        // 将太阳的实时数据传给场景物体的着色器
+        ourShader.setVec3("lightPos", lightPos);      // 太阳光方向
+        ourShader.setVec3("lightColor", sunSystem.color);        // 太阳光颜色
+        ourShader.setFloat("sunIntensity", sunSystem.intensity); // 太阳光强度
+        ourShader.setFloat("ambientStrength", sunSystem.ambient); // 随时间变化的环境光
+        ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix); // 阴影矩阵
+        ourShader.setVec3("viewPos", camera.Position);
+
 
         // 绑定阴影贴图到 15 号槽
         glActiveTexture(GL_TEXTURE15);
@@ -492,6 +524,9 @@ int main()
 
 		    // 最后绘制雪花 (必须在最后，因为它是半透明的)
 	    	snowyScene.Render(camera);
+
+        // 太阳系统
+        sunSystem.Render(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -605,6 +640,51 @@ void processInput(GLFWwindow* window)
             lastToggleTimeF = t;
 			printf("Snow: OFF\n");
         }
+    }
+
+    // 太阳系统
+    // 【新增】控制太阳时间 (例如：按键盘左/右键)
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        dayTime += 0.1f * deltaTime; // 时间前进
+        if (dayTime > 1.0f) dayTime = 0.0f;
+
+        // 确保 dayTime 在 0.0 ~ 1.0 之间循环
+        if (dayTime > 1.0f) dayTime -= 1.0f;
+        if (dayTime < 0.0f) dayTime += 1.0f;
+
+        // --- 核心换算逻辑 ---
+        // 1. 一天总共有 1440 分钟
+        int totalMinutes = static_cast<int>(dayTime * 1440);
+
+        // 2. 计算小时和分钟
+        int hours = (totalMinutes / 60) % 24;
+        int minutes = totalMinutes % 60;
+
+        // 3. 输出时间。使用 %02d 可以确保不足两位时补0（例如 04:05）
+        // \r 是回车符，可以让输出在同一行刷新，不会刷屏
+        printf("\rCurrent Simulation Time: [%02d:%02d] (dayTime: %.4f)", hours, minutes, dayTime);
+        fflush(stdout); // 强制刷新缓冲区，确保实时显示
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        dayTime -= 0.1f * deltaTime; // 时间后退
+        if (dayTime < 0.0f) dayTime = 1.0f;
+
+        // 确保 dayTime 在 0.0 ~ 1.0 之间循环
+        if (dayTime > 1.0f) dayTime -= 1.0f;
+        if (dayTime < 0.0f) dayTime += 1.0f;
+
+        // --- 核心换算逻辑 ---
+        // 1. 一天总共有 1440 分钟
+        int totalMinutes = static_cast<int>(dayTime * 1440);
+
+        // 2. 计算小时和分钟
+        int hours = (totalMinutes / 60) % 24;
+        int minutes = totalMinutes % 60;
+
+        // 3. 输出时间。使用 %02d 可以确保不足两位时补0（例如 04:05）
+        // \r 是回车符，可以让输出在同一行刷新，不会刷屏
+        printf("\rCurrent Simulation Time: [%02d:%02d] (dayTime: %.4f)", hours, minutes, dayTime);
+        fflush(stdout); // 强制刷新缓冲区，确保实时显示
     }
 }       
 
