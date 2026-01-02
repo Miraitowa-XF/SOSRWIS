@@ -19,6 +19,19 @@ uniform float sunIntensity;    // 太阳的实时强度
 uniform float ambientStrength; // 实时环境光
 uniform vec3 viewPos;
 
+// --- 【新增】路灯 (点光源) ---
+#define NR_POINT_LIGHTS 4  // 定义路灯数量：4盏
+struct PointLight {
+    vec3 position;
+    vec3 color;
+    
+    float constant;
+    float linear;
+    float quadratic;
+};
+uniform PointLight pointLights[NR_POINT_LIGHTS]; // 数组
+uniform bool lampOn;     // 开关状态
+
 // ==========================================================
 // 阴影计算函数
 // 返回值: 1.0 表示在阴影中(全黑)，0.0 表示不在阴影中(亮)
@@ -61,50 +74,69 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
     return shadow;
 }
 
+// 新增：计算单个点光源的函数
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 objectColor)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    
+    // 漫反射
+    float diff = max(dot(normal, lightDir), 0.0);
+    // 镜面反射
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    
+    // 衰减
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+
+    // 合并
+    vec3 diffuse = light.color * diff * objectColor;
+    vec3 specular = light.color * spec * 0.5; // 0.5是镜面强度
+    
+    diffuse *= attenuation;
+    specular *= attenuation;
+    
+    return (diffuse + specular);
+}
+
 void main()
 {
-    // 1. 获取纹理颜色
     vec4 texColor = texture(texture_diffuse1, TexCoords);
-
-    // 【透明度测试】直接丢弃透明像素 (草丛、玻璃孔洞等)
-    if(texColor.a < 0.1)
-        discard;
-
+    if(texColor.a < 0.01) discard;
     vec3 objectColor = texColor.rgb;
-
-    // ==========================================================
-    // 标准冯氏光照计算 (Phong Lighting)
-    // ==========================================================
-
-    // 2. 环境光 (Ambient) 
-    // 这是不管有没有影子都能照亮的部分
-    // float ambientStrength = 0.4; 
-    vec3 ambient = ambientStrength * lightColor;
-  
-    // 3. 漫反射 (Diffuse)
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * sunIntensity * lightColor;
-    
-    // 4. 镜面反射 (Specular)
-    float specularStrength = 0.2; // 稍微调低一点，避免塑料感太强
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); 
-    vec3 specular = specularStrength * spec * sunIntensity * lightColor;
+
+    // =======================================================
+    // 1. 计算太阳/月亮光照 (基础环境光在这里计算)
+    // =======================================================
+    vec3 sunLightDir = normalize(lightPos - FragPos);
     
-    // ==========================================================
-    // 阴影应用
-    // ==========================================================
+    // 【修复 1】直接使用传入的 ambientStrength，不再乘以 0.4
+    // 这样 SunSystem 里的 0.03 (深夜) 就会生效，黑夜会变得很黑
+    vec3 ambient = ambientStrength * lightColor; 
     
-    // 计算阴影因子 (0.0 = 无阴影, 1.0 = 全阴影)
-    float shadow = ShadowCalculation(FragPosLightSpace, norm, lightDir);       
+    float diff = max(dot(norm, sunLightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
     
-    // 最终颜色公式：
-    // Ambient 不受阴影影响 (否则阴影里就是死黑)
-    // Diffuse 和 Specular 会被阴影遮挡
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * objectColor;    
-    
-    FragColor = vec4(lighting, texColor.a);
+    vec3 reflectDir = reflect(-sunLightDir, norm);  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = 0.2 * spec * lightColor; 
+
+    float shadow = ShadowCalculation(FragPosLightSpace, norm, sunLightDir);       
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * objectColor;
+
+    // =======================================================
+    // 2. 【升级】计算 4 盏路灯
+    // =======================================================
+    if(lampOn) // 总开关
+    {
+        for(int i = 0; i < NR_POINT_LIGHTS; i++)
+        {
+            // 叠加每一盏灯的光照贡献
+            result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, objectColor);
+        }
+    }
+
+    FragColor = vec4(result, texColor.a);
 }
