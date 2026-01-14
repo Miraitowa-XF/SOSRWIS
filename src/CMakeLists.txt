@@ -2,7 +2,7 @@
 file(GLOB_RECURSE SOURCES "*.cpp" "*.c")
 
 # 创建 CoreLib 静态库
-add_library(CoreLib ${SOURCES})
+add_library(CoreLib ${SOURCES} )
 
 # 【关键点】
 # CoreLib 里的代码可能会用到 glad.h 或 glfw3.h
