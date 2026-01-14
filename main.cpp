@@ -700,7 +700,7 @@ void processInput(GLFWwindow* window)
             printf("Heavy snow: ON\n");
         }
     }
-}
+
 
     // 太阳系统
     // 【新增】控制太阳时间 (例如：按键盘左/右键)
