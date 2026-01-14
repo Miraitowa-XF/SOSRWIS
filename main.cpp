@@ -8,7 +8,7 @@
 #include "Core/Shader.h"
 #include "Core/Camera.h"
 #include "Core/Collision.h"
-#include "Renderer/Model.h" // <--- 【新增】引入模型类
+#include "Renderer/Model.h"
 #include "Renderer/Skybox.h"
 
 #include <iostream>
@@ -73,7 +73,6 @@ SunSystem sunSystem;
 float dayTime = 0.0f; // 【修改】0.0 代表午夜 (00:00)，也就是程序启动就是黑夜
 
 
-// �ص���������
 // 回调函数声明
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -311,11 +310,10 @@ int main()
     // 初始化下雪场景
     initSnowyScene();
 
-    // 4. 渲染循环
     // 太阳系统
-      initSunSystem();
+    initSunSystem();
 
-    // 4. ��Ⱦѭ��
+    // 4. 渲染循环
     // ==========================================
     // 【新增】配置阴影贴图 FBO
     // ==========================================
@@ -502,7 +500,7 @@ int main()
             ourShader.setFloat("pointLights[" + number + "].quadratic", 0.032f);
         }
 
-        // 总开关 (受 L 键控制)
+        // 总开关 (受 G 键控制)
         ourShader.setBool("lampOn", isLampOn);
         
         // 太阳系统
@@ -749,15 +747,15 @@ void processInput(GLFWwindow* window)
         fflush(stdout); // 强制刷新缓冲区，确保实时显示
     }
 
-    // 【新增】按 'L' 键切换路灯
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lKeyPressed)
+    // 【新增】按 'G' 键切换路灯
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !lKeyPressed)
     {
         isLampOn = !isLampOn;
         lKeyPressed = true;
         if (isLampOn) std::cout << "Street Lamp: ON" << std::endl;
         else std::cout << "Street Lamp: OFF" << std::endl;
     }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
     {
         lKeyPressed = false;
     }
