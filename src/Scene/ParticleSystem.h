@@ -3,33 +3,35 @@
 #include<glad/glad.h> 
 
 /*
-²ÎÊıËµÃ÷£º
+å‚æ•°è¯´æ˜ï¼š
 
-SnowParticle: µ¥¸öÑ©»¨Á£×ÓµÄÊı¾İ½á¹¹
-ÆäÖĞ£º
-	- position: Á£×ÓÎ»ÖÃ
-	- velocity: Á£×ÓËÙ¶È
-	- lifetime: Á£×Ó´æ»îÊ±¼ä
-	- size: Á£×Ó´óĞ¡
+SnowParticle: å•ä¸ªé›ªèŠ±ç²’å­çš„æ•°æ®ç»“æ„
+å…¶ä¸­ï¼š
+	- position: ç²’å­ä½ç½®
+	- velocity: ç²’å­é€Ÿåº¦
+	- lifetime: ç²’å­å­˜æ´»æ—¶é—´
+	- size: ç²’å­å¤§å°
 
-ParticleSystem: Á£×ÓÏµÍ³Àà£¬¹ÜÀíÑ©»¨Á£×ÓµÄÉú³É¡¢¸üĞÂºÍäÖÈ¾
-ÆäÖĞ£º
-	- spawnRate: Éú³ÉÁ£×ÓµÄËÙÂÊ£¨Ã¿Ãë¶àÉÙ¸ö£©
-	- wind: ·çµÄÓ°ÏìÏòÁ¿
-	- active: Á£×ÓÏµÍ³ÊÇ·ñ¼¤»î
-	- particles: ´æ´¢ËùÓĞ»îÔ¾Á£×ÓµÄÈİÆ÷
-	- spawnAccumulator: ÓÃÓÚ°´ËÙÂÊÉú³ÉÁ£×ÓµÄÀÛ¼ÓÆ÷
+ParticleSystem: ç²’å­ç³»ç»Ÿç±»ï¼Œç®¡ç†é›ªèŠ±ç²’å­çš„ç”Ÿæˆã€æ›´æ–°å’Œæ¸²æŸ“
+å…¶ä¸­ï¼š
+	- spawnRate: ç”Ÿæˆç²’å­çš„é€Ÿç‡ï¼ˆæ¯ç§’å¤šå°‘ä¸ªï¼‰
+	- wind: é£çš„å½±å“å‘é‡
+	- active: ç²’å­ç³»ç»Ÿæ˜¯å¦æ¿€æ´»
+	- particles: å­˜å‚¨æ‰€æœ‰æ´»è·ƒç²’å­çš„å®¹å™¨
+	- spawnAccumulator: ç”¨äºæŒ‰é€Ÿç‡ç”Ÿæˆç²’å­çš„ç´¯åŠ å™¨
 
-ÒªĞŞ¸ÄSnowParticleµÄÊôĞÔ·¶Î§£¬Çëµ½ParticleSystem.cppÖĞµÄParticleSystem::SpawnParticle()º¯ÊıÖĞĞŞ¸ÄÁ£×ÓÉú³ÉÊ±µÄËæ»ú·¶Î§¡£
+è¦ä¿®æ”¹SnowParticleçš„å±æ€§èŒƒå›´ï¼Œè¯·åˆ°ParticleSystem.cppä¸­çš„ParticleSystem::SpawnParticle()å‡½æ•°ä¸­ä¿®æ”¹ç²’å­ç”Ÿæˆæ—¶çš„éšæœºèŒƒå›´ã€‚
 
 
-ÒªĞŞ¸ÄPatrticleSystem³õÊ¼»¯µÄ²ÎÊı£¬Çëµ½Scene.cppÖĞµÄSnowScene::Initº¯ÊıÖĞĞŞ¸ÄÁ£×ÓÏµÍ³µÄÏà¹ØÉèÖÃ¡£
-Ö÷ÒªÊÇÉæ¼°µ½£º
+è¦ä¿®æ”¹PatrticleSystemåˆå§‹åŒ–çš„å‚æ•°ï¼Œè¯·åˆ°Scene.cppä¸­çš„SnowScene::Initå‡½æ•°ä¸­ä¿®æ”¹ç²’å­ç³»ç»Ÿçš„ç›¸å…³è®¾ç½®ã€‚
+ä¸»è¦æ˜¯æ¶‰åŠåˆ°ï¼š
 		void SetSpawnRate(float rate);
 		void SetWind(const glm::vec3& wind);
 		void SetActive(bool active);
 
-×ÛÉÏ£º¼´µ½£ºParticleSystem.cpp\ParticleSystem::SpawnParticle()¡¢Scene.cpp\SnowScene::Init
+ç»¼ä¸Šï¼šå³åˆ°ï¼šParticleSystem.cpp\ParticleSystem::SpawnParticle()ã€Scene.cpp\SnowScene::Init
+
+å¯¹äºï¼šGravityå¸¸é‡ï¼Œå¯ä»¥åœ¨ParticleSystem.cppæ–‡ä»¶é¡¶éƒ¨ä¿®æ”¹å…¶å€¼ã€‚
 */
 
 
@@ -38,46 +40,52 @@ struct SnowParticle {
 	glm::vec3 velocity;
 	float lifetime;
 	float size;
+	float phase, swaySpeed;		//æ‘†åŠ¨ç›¸å…³
+	float angle, angularSpeed;	//æ—‹è½¬ç›¸å…³
+
+
 	SnowParticle()
-		: position(0.0f), velocity(0.0f), lifetime(0.0f), size(1.0f) {
+		: position(0.0f), velocity(0.0f), lifetime(0.0f), size(1.0f), phase(0.0f), swaySpeed(0.0f), angle(0.0f), angularSpeed(0.0f) {
 	}
-	SnowParticle(const glm::vec3& pos, const glm::vec3& vel, float life, float s)
-		: position(pos), velocity(vel), lifetime(life), size(s) {
+	SnowParticle(const glm::vec3& pos, const glm::vec3& vel, float life, float s, float phase, float swaySpeed, float angle, float angularSpeed)
+		: position(pos), velocity(vel), lifetime(life), size(s), phase(phase), swaySpeed(swaySpeed), angle(angle), angularSpeed(angularSpeed) {
 	}
 };
 
 class ParticleSystem {
-	public:
-		void Init(const char* vertPath, const char* fragPath, const char* texturePath);
-		void Update(float deltaTime);
-		void Render(const glm::mat4& view, const glm::mat4& proj);
+public:
+	void Init(const char* vertPath, const char* fragPath, const char* texturePath);
+	void Update(float deltaTime);
+	void Render(const glm::mat4& view, const glm::mat4& proj);
 
-		void SetSpawnRate(float rate);
-		void SetWind(const glm::vec3& wind);
-		void SetActive(bool active);
+	void SetSpawnRate(float rate);
+	void SetWind(const glm::vec3& wind);
+	void SetActive(bool active);
 
-		void SetTexture(unsigned int texID);
-		void SetShader(unsigned int shaderID);
+	void SetTexture(unsigned int texID);
+	void SetShader(unsigned int shaderID);
 
-	private:
-		void SpawnParticle();
-		unsigned int LoadShader(const char* vertPath, const char* fragPath);
-		unsigned int LoadTexture(const char* texturePath);
+private:
+	void SpawnParticle();
+	unsigned int LoadShader(const char* vertPath, const char* fragPath);
+	unsigned int LoadTexture(const char* texturePath);
 
 
-		std::vector<SnowParticle> particles;
-		float spawnRate = 10.0f; // particles per second
-		float spawnAccumulator = 0.0f;
-		glm::vec3 wind = glm::vec3(0.2f, 0.0f, 0.1f);
-		bool active = false;
+	std::vector<SnowParticle> particles;
+	float spawnRate = 10.0f; // particles per second
+	float spawnAccumulator = 0.0f;
+	glm::vec3 wind = glm::vec3(0.2f, 0.0f, 0.1f);
+	bool active = false;
 
-		//äÖÈ¾Ïà¹Ø
-		unsigned int VAO = 0, VBO = 0;
-		unsigned int shader = 0;
-		unsigned int textureID = 0;
+	//æ¸²æŸ“ç›¸å…³
+	unsigned int VAO = 0, VBO = 0;
+	unsigned int shader = 0;
+	unsigned int textureID = 0;
 
-		GLint locView = -1;
-		GLint locProj = -1;
-		GLint locModel = -1;
+	GLint locView = -1;
+	GLint locProj = -1;
+	GLint locModel = -1;
+
 };
+
 

@@ -7,19 +7,19 @@ void SnowScene::Init(const char* vertPath, const char* fragPath, const char* tex
 
 	particleSystem.Init(vertPath, fragPath, texturePath);
 	particleSystem.SetActive(false);
-	particleSystem.SetSpawnRate(10000.0f);
+	particleSystem.SetSpawnRate(1000.0f);
 	particleSystem.SetWind(glm::vec3(0.24f, 0.0f, 0.16f));
 }
 
 void SnowScene::Update(float deltaTime) {
-	//camera¸üĞÂ
+	//cameraæ›´æ–°
 	//camera.Update(deltaTime);
-	//Á£×Ó¸üĞÂ
+	//ç²’å­æ›´æ–°
 	particleSystem.Update(deltaTime);
 }
 
 void SnowScene::Render(Camera camera) {
-	//»ñÈ¡ÊÓÍ¼¾ØÕóºÍÍ¶Ó°¾ØÕó
+	//è·å–è§†å›¾çŸ©é˜µå’ŒæŠ•å½±çŸ©é˜µ
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 projection = glm::perspective(
 		glm::radians(camera.Zoom),
@@ -27,7 +27,7 @@ void SnowScene::Render(Camera camera) {
 		0.1f,
 		100.0f
 	);
-	//äÖÈ¾Á£×ÓÏµÍ³
+	//æ¸²æŸ“ç²’å­ç³»ç»Ÿ
 	particleSystem.Render(view, projection);
 }
 

@@ -15,7 +15,7 @@
 #include <algorithm>  // for min/max logic inside main if needed
 #include "stb_image.h"
 
-// ��ѩ��������
+//引入下雪场景必要的头文件
 #include "Scene/Scene.h"
 
 unsigned int planeVAO, planeVBO;
@@ -58,7 +58,7 @@ std::vector<SceneObject> allObjects;
 // 【新增】存储所有障碍物的碰撞盒列表
 std::vector<AABB> sceneColliders;
 
-//��ѩ����
+//下雪场景必要全局变量
 SnowScene snowyScene;
 static double lastToggleTimeF = 0.0;
 static double toggleCooldown = 0.15;
@@ -112,12 +112,12 @@ void initDebugCube() {
     glEnableVertexAttribArray(0);
 }
 
-//��ʼ��snowyscene
+//初始化snowyscene
 void initSnowyScene()
 {
     snowyScene.Init("assets/shaders/particle.vert", "assets/shaders/particle.frag", "assets/textures/snow/snowflake.png");
     snowyScene.GetParticleSystem().SetSpawnRate(100.0f);
-	snowyScene.GetParticleSystem().SetWind(glm::vec3(0.2f, 0.0f, 0.1f));
+    snowyScene.GetParticleSystem().SetWind(glm::vec3(0.2f, 0.0f, 0.1f));
     snowyScene.GetParticleSystem().SetActive(false);
 }
 
@@ -202,23 +202,23 @@ int main()
     Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
     Model groundModel("assets/models/snow_floor/scene.gltf");
     Model snowmanModel("assets/models/snow_man/scene.gltf");
-	Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
-	Model treesModel("assets/models/newtrees/newtrees.gltf");
-	Model wellModel("assets/models/old_well/scene.gltf");
-	Model containerModel("assets/models/rusty_container/scene.gltf");
-	Model busModel("assets/models/bus/scene.gltf");
-	Model villageModel("assets/models/snowy_village/scene.gltf");
-	Model mailboxModel("assets/models/mailbox/scene.gltf");
-	Model christmasTreesModel("assets/models/christmas_tree/scene.gltf");
-	Model benchModel("assets/models/bench/scene.gltf");
-	Model lampModel("assets/models/street_lamp/scene.gltf");
-	Model jonModel("assets/models/jon_snow/scene.gltf");
-	Model dragonModel("assets/models/snow_dragon/scene.gltf");
-	Model reslerianaModel("assets/models/resleriana/scene.gltf");
-	Model fairyModel("assets/models/garden_fairy/scene.gltf");
-	Model figure1("assets/models/figure1/scene.gltf");
-	Model figure2("assets/models/figure2/scene.gltf");
-	Model fountain("assets/models/fountain/scene.gltf");
+    Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
+    Model treesModel("assets/models/newtrees/newtrees.gltf");
+    Model wellModel("assets/models/old_well/scene.gltf");
+    Model containerModel("assets/models/rusty_container/scene.gltf");
+    Model busModel("assets/models/bus/scene.gltf");
+    Model villageModel("assets/models/snowy_village/scene.gltf");
+    Model mailboxModel("assets/models/mailbox/scene.gltf");
+    Model christmasTreesModel("assets/models/christmas_tree/scene.gltf");
+    Model benchModel("assets/models/bench/scene.gltf");
+    Model lampModel("assets/models/street_lamp/scene.gltf");
+    Model jonModel("assets/models/jon_snow/scene.gltf");
+    Model dragonModel("assets/models/snow_dragon/scene.gltf");
+    Model reslerianaModel("assets/models/resleriana/scene.gltf");
+    Model fairyModel("assets/models/garden_fairy/scene.gltf");
+    Model figure1("assets/models/figure1/scene.gltf");
+    Model figure2("assets/models/figure2/scene.gltf");
+    Model fountain("assets/models/fountain/scene.gltf");
 
     std::cout << "Model Loaded!" << std::endl;
 
@@ -274,10 +274,10 @@ int main()
     // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
     addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
 
-	  //��ѩ������ʼ��
-	  initSnowyScene();
+    // 初始化下雪场景
+    initSnowyScene();
 
-    // 4. ��Ⱦѭ��
+    // 4. 渲染循环
     // ==========================================
     // 【新增】配置阴影贴图 FBO
     // ==========================================
@@ -365,19 +365,19 @@ int main()
         // 清屏
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      
+
         // 更新下雪粒子 (必须在每一帧开始时做)
-		    snowyScene.Update(deltaTime);
+        snowyScene.Update(deltaTime);
 
         ourShader.use();
 
-  //      // 设置光照和相机矩阵
-  //      ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
-		//ourShader.setVec3("lightPos", glm::vec3(0.0f, 20.0f, 0.0f));         // 光源位置
-  //      ourShader.setVec3("viewPos", camera.Position);
+        //      // 设置光照和相机矩阵
+        //      ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));       // (1.0, 1.0, 1.0) 代表纯白色光。
+              //ourShader.setVec3("lightPos", glm::vec3(0.0f, 20.0f, 0.0f));         // 光源位置
+        //      ourShader.setVec3("viewPos", camera.Position);
 
 
-        // 定义光源位置 (需要固定，不能乱跑)
+              // 定义光源位置 (需要固定，不能乱跑)
         glm::vec3 lightPos(10.0f, 20.0f, 10.0f); // 模拟太阳，放高一点
 
         // ============================================================
@@ -490,8 +490,8 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
-		    // 最后绘制雪花 (必须在最后，因为它是半透明的)
-	    	snowyScene.Render(camera);
+        // 最后绘制雪花 (必须在最后，因为它是半透明的)
+        snowyScene.Render(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -589,24 +589,34 @@ void processInput(GLFWwindow* window)
         f1Pressed = false;
     }
 
-    //��ѩ���� O/P
+    //下雪天气开关：O/P, L，O是下雪、P是停止下雪、L是下大雪，
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
         double t = glfwGetTime();
-        if(t - lastToggleTimeF > toggleCooldown) {
+        if (t - lastToggleTimeF > toggleCooldown) {
+            snowyScene.GetParticleSystem().SetSpawnRate(800.0f); // 下大雪
             snowyScene.GetParticleSystem().SetActive(true);
             lastToggleTimeF = t;
             printf("Snow: ON\n");
-		}
-    }
-    if(glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        double t = glfwGetTime();
-        if(t - lastToggleTimeF > toggleCooldown) {
-            snowyScene.GetParticleSystem().SetActive(false);
-            lastToggleTimeF = t;
-			printf("Snow: OFF\n");
         }
     }
-}       
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        double t = glfwGetTime();
+        if (t - lastToggleTimeF > toggleCooldown) {
+            snowyScene.GetParticleSystem().SetActive(false);
+            lastToggleTimeF = t;
+            printf("Snow: OFF\n");
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        double t = glfwGetTime();
+        if (t - lastToggleTimeF > toggleCooldown) {
+            snowyScene.GetParticleSystem().SetSpawnRate(2400.0f); // 下大雪
+            snowyScene.GetParticleSystem().SetActive(true);
+            lastToggleTimeF = t;
+            printf("Heavy snow: ON\n");
+        }
+    }
+}
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
