@@ -2,18 +2,18 @@
 out vec4 FragColor;
 
 in vec2 TexCoords;
-uniform sampler2D particleTexture; // Ñ©»¨µÄÍ¼Æ¬£¨pngÍ¸Ã÷±³¾°£©
+uniform sampler2D particleTexture; // é›ªèŠ±çš„å›¾ç‰‡ï¼ˆpngé€æ˜èƒŒæ™¯ï¼‰
 
 void main()
 {
     vec4 texColor = texture(particleTexture, TexCoords);
     
-    // ¹Ø¼ü£ºÍ¸Ã÷¶È²âÊÔ
-    // Èç¹ûÏñËØÌ«Í¸Ã÷£¨Ñ©»¨µÄÍ¸Ã÷±³¾°²¿·Ö£©£¬Ö±½Ó¶ªÆú£¬²»äÖÈ¾
+    // å…³é”®ï¼šé€æ˜åº¦æµ‹è¯•
+    // å¦‚æœåƒç´ å¤ªé€æ˜ï¼ˆé›ªèŠ±çš„é€æ˜èƒŒæ™¯éƒ¨åˆ†ï¼‰ï¼Œç›´æ¥ä¸¢å¼ƒï¼Œä¸æ¸²æŸ“
     if(texColor.a < 0.2)
         discard;
         
-    // ¿ÉÒÔÔÚÕâÀï¸øÑ©»¨È¾ÉÏÒ»µã»·¾³¹âµÄÑÕÉ«£¬»òÕßÖ±½Ó°×É«
+    // å¯ä»¥åœ¨è¿™é‡Œç»™é›ªèŠ±æŸ“ä¸Šä¸€ç‚¹ç¯å¢ƒå…‰çš„é¢œè‰²ï¼Œæˆ–è€…ç›´æ¥ç™½è‰²
     //FragColor = texColor;
-    FragColor = texColor * vec4(1.2, 1.2, 1.2, 1.0); // ÉÔÎ¢ÌáÁÁÒ»µã
+    FragColor = texColor * vec4(1.2, 1.2, 1.2, 1.0); // ç¨å¾®æäº®ä¸€ç‚¹
 }
