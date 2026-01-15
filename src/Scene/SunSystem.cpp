@@ -17,14 +17,21 @@ SunSystem::SunSystem() {
 
 unsigned int SunSystem::LoadShader(const char* vertPath, const char* fragPath) {
     auto loadFile = [](const char* path) {
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            std::cout << "SunSystem: Failed to open: " << path << std::endl;
-            return std::string();
+        // 1. 以二进制模式打开，原汁原味读取
+        std::ifstream file(path, std::ios::binary);
+        if (!file.is_open()) return std::string();
+
+        // 2. 偷看前3个字节
+        unsigned char bom[3] = { 0 };
+        file.read(reinterpret_cast<char*>(bom), 3);
+
+        // 3. 检查是不是 UTF-8 BOM (0xEF, 0xBB, 0xBF)
+        if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+            // 如果不是 BOM，把指针移回文件开头（假装没看过）
+            file.seekg(0);
         }
-        else {
-            printf("SunSystem: Successfully opened shader %s\n", path);
-        }
+        // 如果是 BOM，指针现在正好在第3个字节后面，直接往下读就是纯代码了，完美跳过！
+
         std::stringstream ss;
         ss << file.rdbuf();
         return ss.str();

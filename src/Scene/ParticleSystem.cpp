@@ -21,15 +21,21 @@ static float quad[] = {
 
 unsigned int ParticleSystem::LoadShader(const char* vertPath, const char* fragPath) {
 	auto loadFile = [](const char* path) {
-		//printf("trying to load file: %s\n", path);
-		std::ifstream file(path);
+		// 1. 二进制模式打开
+		std::ifstream file(path, std::ios::binary);
 		if (!file.is_open()) {
 			std::cout << "Failed to open file: " << path << std::endl;
 			return std::string();
 		}
-		else {
-			printf("Successfully open file %s\n", path);
+
+		// 2. 检测并跳过 BOM
+		unsigned char bom[3] = { 0 };
+		file.read(reinterpret_cast<char*>(bom), 3);
+		if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+			file.seekg(0); // 不是 BOM，倒带
 		}
+		// 是 BOM，直接继续往后读
+
 		std::stringstream ss;
 		ss << file.rdbuf();
 		return ss.str();
