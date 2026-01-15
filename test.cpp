@@ -1,43 +1,45 @@
-// =========================================================================
-// ÕâÊÇÒ»¸ö²âÊÔ´úÂë£¬²âÊÔÄãµÄ»·¾³ÊÇ·ñÕı³£ÅäÖÃÍê³É£¬Èç¹ûÔËĞĞ³É¹¦²¢ÇÒÊä³ö½á¹ûÈ«ÎªOK£¬Ôò±íÊ¾Äã»·¾³ÒÑ¾­ÅäÖÃºÃÁË¡£
-// Ô¤´¦ÀíÖ¸ÁîÓëÍ·ÎÄ¼ş°üº¬
+ï»¿// =========================================================================
+// è¿™æ˜¯ä¸€ä¸ªæµ‹è¯•ä»£ç ï¼Œæµ‹è¯•ä½ çš„ç¯å¢ƒæ˜¯å¦æ­£å¸¸é…ç½®å®Œæˆï¼Œå¦‚æœè¿è¡ŒæˆåŠŸå¹¶ä¸”è¾“å‡ºç»“æœå…¨ä¸ºOKï¼Œåˆ™è¡¨ç¤ºä½ ç¯å¢ƒå·²ç»é…ç½®å¥½äº†ã€‚
+// é¢„å¤„ç†æŒ‡ä»¤ä¸å¤´æ–‡ä»¶åŒ…å« ï¼ˆå¦‚æœç°å®é”™è¯¯ä¿¡æ¯ï¼šåé¢æœ‰â€œ::â€çš„åç§°ä¸€å®šæ˜¯ç±»åæˆ–å‘½åç©ºé—´å
+//                                        åé¢æœ‰â€œ::â€çš„åç§°ä¸€å®šæ˜¯ç±»åæˆ–å‘½åç©ºé—´å
+//                                        è¯·å¿½è§†æŠ¥é”™ï¼Œç›´æ¥è¿è¡Œï¼Œé€šå¸¸å¯ä»¥ç›´æ¥è¿è¡Œï¼‰
 // =========================================================================
 
 #include "stb_image.h"
 
-// 2. ImGui Í·ÎÄ¼ş
+// 2. ImGui å¤´æ–‡ä»¶
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-// 3. OpenGL Óë ´°¿Ú¿â (GLAD ±ØĞëÔÚ GLFW Ö®Ç°)
+// 3. OpenGL ä¸ çª—å£åº“ (GLAD å¿…é¡»åœ¨ GLFW ä¹‹å‰)
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// 4. GLM ÊıÑ§¿â
+// 4. GLM æ•°å­¦åº“
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// 5. Assimp Ä£ĞÍ¼ÓÔØ¿â
+// 5. Assimp æ¨¡å‹åŠ è½½åº“
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-// 6. ±ê×¼¿â
+// 6. æ ‡å‡†åº“
 #include <iostream>
-#include <filesystem> // C++17 ±ê×¼ÎÄ¼şÏµÍ³¿â
+#include <filesystem> // C++17 æ ‡å‡†æ–‡ä»¶ç³»ç»Ÿåº“
 #include <string>
 
-// 7. ×Ô¶¨Òå¿â (src Ä¿Â¼)
+// 7. è‡ªå®šä¹‰åº“ (src ç›®å½•)
 #include "example.h"
 
 // =========================================================================
-// È«¾ÖÉèÖÃ
+// å…¨å±€è®¾ç½®
 // =========================================================================
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
-// ¸¨Öú´òÓ¡º¯Êı
+// è¾…åŠ©æ‰“å°å‡½æ•°
 void printStatus(const std::string& component, bool success, const std::string& message) {
     if (success)
         std::cout << "[ OK ] " << component << ": " << message << std::endl;
@@ -45,48 +47,48 @@ void printStatus(const std::string& component, bool success, const std::string& 
         std::cerr << "[FAIL] " << component << ": " << message << std::endl;
 }
 
-// ´°¿Ú»Øµ÷
+// çª—å£å›è°ƒ
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
 // =========================================================================
-// Ö÷º¯Êı
+// ä¸»å‡½æ•°
 // =========================================================================
 int main()
 {
-    std::cout << "\n========== SOSRWIS È«ÃæÏµÍ³×Ô¼ìÆô¶¯ ==========\n" << std::endl;
+    std::cout << "\n========== SOSRWIS å…¨é¢ç³»ç»Ÿè‡ªæ£€å¯åŠ¨ ==========\n" << std::endl;
 
     // -----------------------------------------------------------
-    // TEST 1: ÑéÖ¤ CoreLib (×Ô¶¨ÒåÔ´Âë)
+    // TEST 1: éªŒè¯ CoreLib (è‡ªå®šä¹‰æºç )
     // -----------------------------------------------------------
     {
         int res = add(100, 200);
         if (res == 300) printStatus("CoreLib (Src)", true, "add(100, 200) = 300");
-        else printStatus("CoreLib (Src)", false, "add() º¯Êı¼ÆËã´íÎó");
+        else printStatus("CoreLib (Src)", false, "add() å‡½æ•°è®¡ç®—é”™è¯¯");
     }
 
     // -----------------------------------------------------------
-    // TEST 2: ÑéÖ¤ Assets ×ÊÔ´Ä¿Â¼ (C++17 filesystem)
+    // TEST 2: éªŒè¯ Assets èµ„æºç›®å½• (C++17 filesystem)
     // -----------------------------------------------------------
     {
-        // CMake Ó¦¸Ã°Ñ assets ÎÄ¼ş¼Ğ¸´ÖÆµ½ÁË exe Í¬¼¶Ä¿Â¼
+        // CMake åº”è¯¥æŠŠ assets æ–‡ä»¶å¤¹å¤åˆ¶åˆ°äº† exe åŒçº§ç›®å½•
         if (std::filesystem::exists("assets")) {
-            printStatus("Assets", true, "¼ì²âµ½ assets ÎÄ¼ş¼Ğ");
+            printStatus("Assets", true, "æ£€æµ‹åˆ° assets æ–‡ä»¶å¤¹");
 
-            // ½øÒ»²½¼ì²é assets ÄÚ²¿½á¹¹ (¿ÉÑ¡)
+            // è¿›ä¸€æ­¥æ£€æŸ¥ assets å†…éƒ¨ç»“æ„ (å¯é€‰)
             if (std::filesystem::exists("assets/models"))
-                std::cout << "       -> models Ä¿Â¼´æÔÚ" << std::endl;
+                std::cout << "       -> models ç›®å½•å­˜åœ¨" << std::endl;
             else
-                std::cout << "       -> [¾¯¸æ] assets/models È±Ê§" << std::endl;
+                std::cout << "       -> [è­¦å‘Š] assets/models ç¼ºå¤±" << std::endl;
         }
         else {
-            printStatus("Assets", false, "Î´ÕÒµ½ assets ÎÄ¼ş¼Ğ! Çë¼ì²é CMake ÅäÖÃ»òÊÖ¶¯¸´ÖÆ¡£");
+            printStatus("Assets", false, "æœªæ‰¾åˆ° assets æ–‡ä»¶å¤¹! è¯·æ£€æŸ¥ CMake é…ç½®æˆ–æ‰‹åŠ¨å¤åˆ¶ã€‚");
         }
     }
 
     // -----------------------------------------------------------
-    // TEST 3: ÑéÖ¤ GLM (ÊıÑ§¿â)
+    // TEST 3: éªŒè¯ GLM (æ•°å­¦åº“)
     // -----------------------------------------------------------
     {
         glm::vec3 v(1.0f, 0.0f, 0.0f);
@@ -94,40 +96,40 @@ int main()
         trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
         glm::vec4 result = trans * glm::vec4(v, 1.0f);
 
-        // Ô­Ê¼(1,0,0) + ÒÆ¶¯(1,1,0) = (2,1,0)
+        // åŸå§‹(1,0,0) + ç§»åŠ¨(1,1,0) = (2,1,0)
         if (result.x == 2.0f && result.y == 1.0f)
-            printStatus("GLM", true, "¾ØÕó±ä»»¼ÆËãÕıÈ·");
+            printStatus("GLM", true, "çŸ©é˜µå˜æ¢è®¡ç®—æ­£ç¡®");
         else
-            printStatus("GLM", false, "¾ØÕó¼ÆËã½á¹ûÒì³£");
+            printStatus("GLM", false, "çŸ©é˜µè®¡ç®—ç»“æœå¼‚å¸¸");
     }
 
     // -----------------------------------------------------------
-    // TEST 4: ÑéÖ¤ Assimp (Ä£ĞÍ¼ÓÔØ¿âÁ´½Ó)
+    // TEST 4: éªŒè¯ Assimp (æ¨¡å‹åŠ è½½åº“é“¾æ¥)
     // -----------------------------------------------------------
     {
-        // Ö»ÒªÕâĞĞ´úÂë²»±¨´í£¬ËµÃ÷Á´½Ó³É¹¦
+        // åªè¦è¿™è¡Œä»£ç ä¸æŠ¥é”™ï¼Œè¯´æ˜é“¾æ¥æˆåŠŸ
         Assimp::Importer importer;
-        // Ëæ±ã´òÓ¡¸ö°æ±¾ºÅÖ¤Ã÷Ëü»î×Å
-        // ×¢Òâ£ºÈç¹ûÄãÊÇ¾²Ì¬±àÒë£¬ÕâÖ¤Ã÷¿âÒÑ¾­´ò½øÈ¥ÁË
-        printStatus("Assimp", true, "Importer ÊµÀı»¯³É¹¦ (¾²Ì¬Á´½ÓÕı³£)");
+        // éšä¾¿æ‰“å°ä¸ªç‰ˆæœ¬å·è¯æ˜å®ƒæ´»ç€
+        // æ³¨æ„ï¼šå¦‚æœä½ æ˜¯é™æ€ç¼–è¯‘ï¼Œè¿™è¯æ˜åº“å·²ç»æ‰“è¿›å»äº†
+        printStatus("Assimp", true, "Importer å®ä¾‹åŒ–æˆåŠŸ (é™æ€é“¾æ¥æ­£å¸¸)");
     }
 
     // -----------------------------------------------------------
-    // TEST 5: ÑéÖ¤ stb_image (Í¼Ïñ¼ÓÔØ)
+    // TEST 5: éªŒè¯ stb_image (å›¾åƒåŠ è½½)
     // -----------------------------------------------------------
     {
         int width, height, nrChannels;
-        // ÎÒÃÇ³¢ÊÔ¼ÓÔØÒ»¸ö²»´æÔÚµÄÎÄ¼ş£¬Ö»Òª±àÒëÍ¨¹ıÇÒÄÜÔËĞĞµ½ÅĞ¶ÏÂß¼­£¬ËµÃ÷¿âÃ»ÎÊÌâ
+        // æˆ‘ä»¬å°è¯•åŠ è½½ä¸€ä¸ªä¸å­˜åœ¨çš„æ–‡ä»¶ï¼Œåªè¦ç¼–è¯‘é€šè¿‡ä¸”èƒ½è¿è¡Œåˆ°åˆ¤æ–­é€»è¾‘ï¼Œè¯´æ˜åº“æ²¡é—®é¢˜
         unsigned char* data = stbi_load("assets/textures/non_existent.jpg", &width, &height, &nrChannels, 0);
         if (!data) {
-            // ÕâÊÇÔ¤ÆÚµÄ£¬ÒòÎªÎÒÃÇÃ»¸øÕæÕıµÄÍ¼Æ¬¡£
-            // ¹Ø¼üÊÇ stbi_load º¯Êı±»³É¹¦µ÷ÓÃÁË£¬Ã»ÓĞ±¨ "Undefined Symbol"
-            printStatus("stb_image", true, "º¯ÊıÁ´½ÓÕı³£ (²âÊÔ¼ÓÔØ¿ÕÎÄ¼ş·µ»Ø NULL)");
+            // è¿™æ˜¯é¢„æœŸçš„ï¼Œå› ä¸ºæˆ‘ä»¬æ²¡ç»™çœŸæ­£çš„å›¾ç‰‡ã€‚
+            // å…³é”®æ˜¯ stbi_load å‡½æ•°è¢«æˆåŠŸè°ƒç”¨äº†ï¼Œæ²¡æœ‰æŠ¥ "Undefined Symbol"
+            printStatus("stb_image", true, "å‡½æ•°é“¾æ¥æ­£å¸¸ (æµ‹è¯•åŠ è½½ç©ºæ–‡ä»¶è¿”å› NULL)");
         }
     }
 
     // -----------------------------------------------------------
-    // TEST 6: ³õÊ¼»¯ GLFW ´°¿Ú
+    // TEST 6: åˆå§‹åŒ– GLFW çª—å£
     // -----------------------------------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -136,57 +138,57 @@ int main()
 
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "SOSRWIS - All Libs Test", NULL, NULL);
     if (window == NULL) {
-        printStatus("GLFW", false, "´°¿Ú´´½¨Ê§°Ü");
+        printStatus("GLFW", false, "çª—å£åˆ›å»ºå¤±è´¥");
         glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    printStatus("GLFW", true, "´°¿Ú´´½¨³É¹¦");
+    printStatus("GLFW", true, "çª—å£åˆ›å»ºæˆåŠŸ");
 
     // -----------------------------------------------------------
-    // TEST 7: ³õÊ¼»¯ GLAD
+    // TEST 7: åˆå§‹åŒ– GLAD
     // -----------------------------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        printStatus("GLAD", false, "OpenGL ¼ÓÔØÊ§°Ü");
+        printStatus("GLAD", false, "OpenGL åŠ è½½å¤±è´¥");
         return -1;
     }
     printStatus("GLAD", true, (std::string("OpenGL Version: ") + (char*)glGetString(GL_VERSION)));
 
     // -----------------------------------------------------------
-    // TEST 8: ³õÊ¼»¯ ImGui (UI ½»»¥¿â)
+    // TEST 8: åˆå§‹åŒ– ImGui (UI äº¤äº’åº“)
     // -----------------------------------------------------------
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark(); // ÉèÖÃ°µºÚÖ÷Ìâ
+    ImGui::StyleColorsDark(); // è®¾ç½®æš—é»‘ä¸»é¢˜
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    printStatus("ImGui", true, "UI ÉÏÏÂÎÄ³õÊ¼»¯Íê³É");
+    printStatus("ImGui", true, "UI ä¸Šä¸‹æ–‡åˆå§‹åŒ–å®Œæˆ");
 
-    std::cout << "\n========== ËùÓĞ¿â¼ì²âÍê±Ï£¬½øÈëäÖÈ¾Ñ­»· ==========\n" << std::endl;
+    std::cout << "\n========== æ‰€æœ‰åº“æ£€æµ‹å®Œæ¯•ï¼Œè¿›å…¥æ¸²æŸ“å¾ªç¯ ==========\n" << std::endl;
 
     // =========================================================================
-    // äÖÈ¾Ñ­»·
+    // æ¸²æŸ“å¾ªç¯
     // =========================================================================
     bool show_demo_window = true;
     while (!glfwWindowShouldClose(window))
     {
-        // 1. ´¦ÀíÊäÈë
+        // 1. å¤„ç†è¾“å…¥
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         glfwPollEvents();
 
-        // 2. ¿ªÆô ImGui ĞÂÖ¡
+        // 2. å¼€å¯ ImGui æ–°å¸§
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 3. ¹¹½¨ ImGui ½çÃæ
+        // 3. æ„å»º ImGui ç•Œé¢
         {
-            ImGui::Begin("SOSRWIS Control Panel Test"); // ´´½¨Ò»¸ö´°¿Ú
+            ImGui::Begin("SOSRWIS Control Panel Test"); // åˆ›å»ºä¸€ä¸ªçª—å£
             ImGui::Text("If you see this, ImGui is working!");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
@@ -199,19 +201,19 @@ int main()
             ImGui::End();
         }
 
-        // 4. äÖÈ¾ OpenGL ±³¾°
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Éî»ÒÉ«±³¾°
+        // 4. æ¸²æŸ“ OpenGL èƒŒæ™¯
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // æ·±ç°è‰²èƒŒæ™¯
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 5. äÖÈ¾ ImGui µ½ÆÁÄ»
+        // 5. æ¸²æŸ“ ImGui åˆ°å±å¹•
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // 6. ½»»»»º³å
+        // 6. äº¤æ¢ç¼“å†²
         glfwSwapBuffers(window);
     }
 
-    // ÇåÀí×ÊÔ´
+    // æ¸…ç†èµ„æº
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

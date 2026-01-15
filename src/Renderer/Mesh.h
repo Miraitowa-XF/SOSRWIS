@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <glad/glad.h> 
 #include <glm/glm.hpp>
@@ -7,40 +7,40 @@
 #include <string>
 #include <vector>
 
-// ÒıÈë Shader Àà£¬ÒòÎª Mesh ĞèÒªÖªµÀ°ÑÊı¾İ´«¸øÄÄ¸ö Shader
+// å¼•å…¥ Shader ç±»ï¼Œå› ä¸º Mesh éœ€è¦çŸ¥é“æŠŠæ•°æ®ä¼ ç»™å“ªä¸ª Shader
 #include "../Core/Shader.h" 
 
-// ¶¨Òå¶¥µã½á¹¹Ìå
+// å®šä¹‰é¡¶ç‚¹ç»“æ„ä½“
 struct Vertex {
-    glm::vec3 Position;  // Î»ÖÃ
-    glm::vec3 Normal;    // ·¨Ïß
-    glm::vec2 TexCoords; // ÎÆÀí×ø±ê
+    glm::vec3 Position;  // ä½ç½®
+    glm::vec3 Normal;    // æ³•çº¿
+    glm::vec2 TexCoords; // çº¹ç†åæ ‡
 };
 
-// ¶¨ÒåÎÆÀí½á¹¹Ìå
+// å®šä¹‰çº¹ç†ç»“æ„ä½“
 struct Texture {
     unsigned int id;
-    std::string type; // "texture_diffuse" »ò "texture_specular"
-    std::string path; // ÎÄ¼şÂ·¾¶£¬ÓÃÓÚ·ÀÖ¹ÖØ¸´¼ÓÔØ
+    std::string type; // "texture_diffuse" æˆ– "texture_specular"
+    std::string path; // æ–‡ä»¶è·¯å¾„ï¼Œç”¨äºé˜²æ­¢é‡å¤åŠ è½½
 };
 
 class Mesh {
 public:
-    // Íø¸ñÊı¾İ
+    // ç½‘æ ¼æ•°æ®
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture>      textures;
     unsigned int VAO;
 
-    // ¹¹Ôìº¯Êı
+    // æ„é€ å‡½æ•°
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 
-    // »æÖÆº¯Êı
+    // ç»˜åˆ¶å‡½æ•°
     void Draw(Shader& shader);
 
 private:
-    // äÖÈ¾Êı¾İ
+    // æ¸²æŸ“æ•°æ®
     unsigned int VBO, EBO;
-    // ³õÊ¼»¯»º³å
+    // åˆå§‹åŒ–ç¼“å†²
     void setupMesh();
 };

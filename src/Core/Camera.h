@@ -1,20 +1,20 @@
-#pragma once
+ï»¿#pragma once
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 /*
- * ÓÅ»¯ËµÃ÷£¨±Ø¶Á£©£º
- * - Êó±êÒÆ¶¯»áĞŞ¸Ä TargetYaw / TargetPitch£¨Ä¿±ê½Ç¶È£©
- * - Ã¿Ö¡µ÷ÓÃ Update(deltaTime) »áÊ¹ÓÃÖ¸ÊıÆ½»¬½«µ±Ç°½Ç¶ÈÆ½»¬±Æ½üÄ¿±ê½Ç¶È
- * - ÕâÑùÄÜÏÔÖø½µµÍÊó±ê¶¶¶¯ÓëÊÓ½Ç¡°¸îÁÑ¡±¸Ğ£¬Í¬Ê±±£ÁôÁéÃô¶ÈÏìÓ¦
+ * ä¼˜åŒ–è¯´æ˜ï¼ˆå¿…è¯»ï¼‰ï¼š
+ * - é¼ æ ‡ç§»åŠ¨ä¼šä¿®æ”¹ TargetYaw / TargetPitchï¼ˆç›®æ ‡è§’åº¦ï¼‰
+ * - æ¯å¸§è°ƒç”¨ Update(deltaTime) ä¼šä½¿ç”¨æŒ‡æ•°å¹³æ»‘å°†å½“å‰è§’åº¦å¹³æ»‘é€¼è¿‘ç›®æ ‡è§’åº¦
+ * - è¿™æ ·èƒ½æ˜¾è‘—é™ä½é¼ æ ‡æŠ–åŠ¨ä¸è§†è§’â€œå‰²è£‚â€æ„Ÿï¼ŒåŒæ—¶ä¿ç•™çµæ•åº¦å“åº”
  *
- * Ê¹ÓÃ·½·¨£¨Ê¾Àı£©£º
+ * ä½¿ç”¨æ–¹æ³•ï¼ˆç¤ºä¾‹ï¼‰ï¼š
  *   Camera camera(glm::vec3(0.0f, 1.8f, 5.0f));
- *   // ÔÚ GLFW »Øµ÷»òÖ÷Ñ­»·´¦ÀíÖĞ£º
+ *   // åœ¨ GLFW å›è°ƒæˆ–ä¸»å¾ªç¯å¤„ç†ä¸­ï¼š
  *   camera.ProcessMouseMovement(dx, dy);
  *   camera.ProcessKeyboard(FORWARD, deltaTime);
- *   camera.Update(deltaTime);                // Ã¿Ö¡±ØĞëµ÷ÓÃ
+ *   camera.Update(deltaTime);                // æ¯å¸§å¿…é¡»è°ƒç”¨
  *   glm::mat4 view = camera.GetViewMatrix();
  */
 
@@ -27,9 +27,9 @@ enum Camera_Movement {
     DOWN
 };
 
-// Ä¬ÈÏ²ÎÊı
-static constexpr float DEFAULT_YAW = -90.0f;        // Æ«º½½Ç 0¶È³¯Ïò +X Öá£¬-90¶È³¯Ïò -Z Öá
-static constexpr float DEFAULT_PITCH = 0.0f;        // ¸©Ñö½Ç
+// é»˜è®¤å‚æ•°
+static constexpr float DEFAULT_YAW = -90.0f;        // åèˆªè§’ 0åº¦æœå‘ +X è½´ï¼Œ-90åº¦æœå‘ -Z è½´
+static constexpr float DEFAULT_PITCH = 0.0f;        // ä¿¯ä»°è§’
 static constexpr float DEFAULT_SPEED = 3.5f;
 static constexpr float DEFAULT_SENSITIVITY = 0.005f;
 static constexpr float DEFAULT_ZOOM = 45.0f;
@@ -37,67 +37,67 @@ static constexpr float DEFAULT_ZOOM = 45.0f;
 class Camera
 {
 public:
-    // --- ¹«ÓĞÊôĞÔ£¨¿ÉÖ±½ÓÉèÖÃ/²éÑ¯£© ---
+    // --- å…¬æœ‰å±æ€§ï¼ˆå¯ç›´æ¥è®¾ç½®/æŸ¥è¯¢ï¼‰ ---
     glm::vec3 Position;
     glm::vec3 Front;
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
 
-    // µ±Ç°½Ç¶È£¨Êµ¼ÊÓÃÓÚ¼ÆËã Front£©
+    // å½“å‰è§’åº¦ï¼ˆå®é™…ç”¨äºè®¡ç®— Frontï¼‰
     float Yaw;
     float Pitch;
 
-    // Ä¿±ê½Ç¶È£¨ÓÉÊó±êÊäÈëÖ±½ÓĞŞ¸Ä£©
+    // ç›®æ ‡è§’åº¦ï¼ˆç”±é¼ æ ‡è¾“å…¥ç›´æ¥ä¿®æ”¹ï¼‰
     float TargetYaw;
     float TargetPitch;
 
-    // Ñ¡Ïî
-    float MovementSpeed;       // Æ½ÒÆËÙ¶È
-    float MouseSensitivity;    // Êó±êÁéÃô¶È£¨Ó°ÏìÄ¿±ê½Ç¶È±ä¸ü·ù¶È£©
-    float Zoom;                // µ±Ç° FOV£¨¶È£©
-    float TargetZoom;          // Ä¿±ê FOV£¨¿ÉÓÃÓÚÆ½»¬Ëõ·Å£¬Èç¹ûĞèÒª£©
+    // é€‰é¡¹
+    float MovementSpeed;       // å¹³ç§»é€Ÿåº¦
+    float MouseSensitivity;    // é¼ æ ‡çµæ•åº¦ï¼ˆå½±å“ç›®æ ‡è§’åº¦å˜æ›´å¹…åº¦ï¼‰
+    float Zoom;                // å½“å‰ FOVï¼ˆåº¦ï¼‰
+    float TargetZoom;          // ç›®æ ‡ FOVï¼ˆå¯ç”¨äºå¹³æ»‘ç¼©æ”¾ï¼Œå¦‚æœéœ€è¦ï¼‰
 
-    // Æ½»¬²ÎÊı£¨ÒÔÃ¿ÃëÎªµ¥Î»µÄ¡°ËÙ¶È¡±£©
-    // ¸ü´óµÄÖµÒâÎ¶×Å¸ü¿ì±Æ½üÄ¿±ê£¨½Ó½üÎŞÆ½»¬£©£¬¸üĞ¡µÄÖµÒâÎ¶×Å¸üÆ½»¬£¨ÂıÏìÓ¦£©
-    float RotationSmoothSpeed; // ½Ç¶ÈÆ½»¬ËÙ¶È£¨µ¥Î»£º1/Ãë£©
-    float ZoomSmoothSpeed;     // Ëõ·ÅÆ½»¬ËÙ¶È£¨µ¥Î»£º1/Ãë£©
+    // å¹³æ»‘å‚æ•°ï¼ˆä»¥æ¯ç§’ä¸ºå•ä½çš„â€œé€Ÿåº¦â€ï¼‰
+    // æ›´å¤§çš„å€¼æ„å‘³ç€æ›´å¿«é€¼è¿‘ç›®æ ‡ï¼ˆæ¥è¿‘æ— å¹³æ»‘ï¼‰ï¼Œæ›´å°çš„å€¼æ„å‘³ç€æ›´å¹³æ»‘ï¼ˆæ…¢å“åº”ï¼‰
+    float RotationSmoothSpeed; // è§’åº¦å¹³æ»‘é€Ÿåº¦ï¼ˆå•ä½ï¼š1/ç§’ï¼‰
+    float ZoomSmoothSpeed;     // ç¼©æ”¾å¹³æ»‘é€Ÿåº¦ï¼ˆå•ä½ï¼š1/ç§’ï¼‰
 
-    bool FPS_Mode = false; // Ä¬ÈÏ¹Ø±Õ£¬°´¼ü¿ªÆô
-    float GroundHeight = 2.5f; // ÈËµÄÑÛ¾¦¸ß¶È
+    bool FPS_Mode = false; // é»˜è®¤å…³é—­ï¼ŒæŒ‰é”®å¼€å¯
+    float GroundHeight = 2.5f; // äººçš„çœ¼ç›é«˜åº¦
 
 public:
-    // ¹¹Ôìº¯Êı
+    // æ„é€ å‡½æ•°
     Camera(
-		glm::vec3 position = glm::vec3(0.0f, 1.8f, 5.0f),       // ÕâÀïÊÇÄ¬ÈÏµÄÖµ£¬ºóĞøÔÚmain.cppÖĞ»á¸²¸Ç
-		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),             // ¶¨ÒåÊÀ½çÏòÉÏ·½Ïò
+		glm::vec3 position = glm::vec3(0.0f, 1.8f, 5.0f),       // è¿™é‡Œæ˜¯é»˜è®¤çš„å€¼ï¼Œåç»­åœ¨main.cppä¸­ä¼šè¦†ç›–
+		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),             // å®šä¹‰ä¸–ç•Œå‘ä¸Šæ–¹å‘
         float yaw = DEFAULT_YAW,
         float pitch = DEFAULT_PITCH
     );
 
-    // Ã¿Ö¡µ÷ÓÃ£¬ÓÃÓÚÆ½»¬¸üĞÂ£¨±ØĞëÔÚäÖÈ¾Ç°Ã¿Ö¡µ÷ÓÃ£©
+    // æ¯å¸§è°ƒç”¨ï¼Œç”¨äºå¹³æ»‘æ›´æ–°ï¼ˆå¿…é¡»åœ¨æ¸²æŸ“å‰æ¯å¸§è°ƒç”¨ï¼‰
     void Update(float deltaTime);
 
-    // »ñÈ¡µ±Ç°ÊÓÍ¼¾ØÕó£¨µ÷ÓÃÊ±¼Ù¶¨ÒÑ¾­Ö´ĞĞ Update£©
+    // è·å–å½“å‰è§†å›¾çŸ©é˜µï¼ˆè°ƒç”¨æ—¶å‡å®šå·²ç»æ‰§è¡Œ Updateï¼‰
     glm::mat4 GetViewMatrix() const;
 
-    // ´¦Àí¼üÅÌÒÆ¶¯£¨»áÁ¢¼´¸Ä±ä Position£©
+    // å¤„ç†é”®ç›˜ç§»åŠ¨ï¼ˆä¼šç«‹å³æ”¹å˜ Positionï¼‰
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 
-    // ´¦ÀíÊó±êÒÆ¶¯£º¸üĞÂÄ¿±ê½Ç¶È£¨²»Ö±½Ó¸Ä±äµ±Ç°½Ç¶È£©
+    // å¤„ç†é¼ æ ‡ç§»åŠ¨ï¼šæ›´æ–°ç›®æ ‡è§’åº¦ï¼ˆä¸ç›´æ¥æ”¹å˜å½“å‰è§’åº¦ï¼‰
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 
-    // ´¦Àí¹öÂÖ£º¸Ä±äÄ¿±êËõ·Å£¨TargetZoom£©£¬¿ÉÔÚ Update ÖĞÆ½»¬µ½ Zoom
+    // å¤„ç†æ»šè½®ï¼šæ”¹å˜ç›®æ ‡ç¼©æ”¾ï¼ˆTargetZoomï¼‰ï¼Œå¯åœ¨ Update ä¸­å¹³æ»‘åˆ° Zoom
     void ProcessMouseScroll(float yoffset);
 
-    // ¿ÉÑ¡£ºÖ±½ÓÉèÖÃÄ¿±êÎ»ÖÃ/½Ç¶È
+    // å¯é€‰ï¼šç›´æ¥è®¾ç½®ç›®æ ‡ä½ç½®/è§’åº¦
     void SetPosition(const glm::vec3& pos) { Position = pos; }
     void SetTargetAngles(float yaw, float pitch) { TargetYaw = yaw; TargetPitch = pitch; }
 
-    // ´«Èë¹éÒ»»¯µÄÆ«ÒÆÁ¿£¨[-1,1] ´óĞ¡£©£¬ÓÉ Camera ½«ÆäÓ³ÉäÎª½Ç¶ÈÔöÁ¿
+    // ä¼ å…¥å½’ä¸€åŒ–çš„åç§»é‡ï¼ˆ[-1,1] å¤§å°ï¼‰ï¼Œç”± Camera å°†å…¶æ˜ å°„ä¸ºè§’åº¦å¢é‡
     void ProcessMouseMovementNormalized(float nx, float ny, bool constrainPitch = true);
 
 private:
-    // ¸üĞÂ Front / Right / Up£¨»ùÓÚµ±Ç° Yaw / Pitch£©
+    // æ›´æ–° Front / Right / Upï¼ˆåŸºäºå½“å‰ Yaw / Pitchï¼‰
     void updateCameraVectors();
 };

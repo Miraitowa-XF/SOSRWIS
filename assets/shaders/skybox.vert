@@ -1,4 +1,4 @@
-#version 330 core
+ï»¿#version 330 core
 layout (location = 0) in vec3 aPos;
 
 out vec3 TexCoords;
@@ -9,9 +9,9 @@ uniform mat4 view;
 void main()
 {
     TexCoords = aPos;
-    // ÒÆ³ı view ¾ØÕóµÄÎ»ÒÆ²¿·Ö£¬ÈÃÌì¿ÕºĞÓÀÔ¶¸ú×ÅÏà»úÅÜ
+    // ç§»é™¤ view çŸ©é˜µçš„ä½ç§»éƒ¨åˆ†ï¼Œè®©å¤©ç©ºç›’æ°¸è¿œè·Ÿç€ç›¸æœºè·‘
     vec4 pos = projection * mat4(mat3(view)) * vec4(aPos, 1.0);
     
-    // ¼¼ÇÉ£ºÈÃ z ×ÜÊÇµÈÓÚ w£¬ÕâÑùÍ¸ÊÓ³ı·¨ºó z=1.0 (Éî¶È×î´óÖµ)
+    // æŠ€å·§ï¼šè®© z æ€»æ˜¯ç­‰äº wï¼Œè¿™æ ·é€è§†é™¤æ³•å z=1.0 (æ·±åº¦æœ€å¤§å€¼)
     gl_Position = pos.xyww; 
 }

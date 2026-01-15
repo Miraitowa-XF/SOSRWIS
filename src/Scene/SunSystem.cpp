@@ -1,17 +1,17 @@
-#include "SunSystem.h"
+ï»¿#include "SunSystem.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
-// ¹¹Ôìº¯Êı£º³õÊ¼»¯ÎïÀíÊôĞÔÎªÕıÎç×´Ì¬
+// æ„é€ å‡½æ•°ï¼šåˆå§‹åŒ–ç‰©ç†å±æ€§ä¸ºæ­£åˆçŠ¶æ€
 SunSystem::SunSystem() {
-    direction = glm::vec3(0.0f, 1.0f, 0.0f);    // ´¹Ö±ÏòÏÂÕÕÉä
-    worldPos = glm::vec3(0.0f, 80.0f, 0.0f);    // Î»ÓÚÕıÉÏ·½¸ß¿Õ
-    color = glm::vec3(1.0f, 1.0f, 1.0f);        // ´¿°×¹â
-    intensity = 1.0f;                           // È«Ç¿¶È
-    ambient = 0.2f;                             // »ù´¡»·¾³¹â
+    direction = glm::vec3(0.0f, 1.0f, 0.0f);    // å‚ç›´å‘ä¸‹ç…§å°„
+    worldPos = glm::vec3(0.0f, 80.0f, 0.0f);    // ä½äºæ­£ä¸Šæ–¹é«˜ç©º
+    color = glm::vec3(1.0f, 1.0f, 1.0f);        // çº¯ç™½å…‰
+    intensity = 1.0f;                           // å…¨å¼ºåº¦
+    ambient = 0.2f;                             // åŸºç¡€ç¯å¢ƒå…‰
 }
 
 
@@ -40,7 +40,7 @@ unsigned int SunSystem::LoadShader(const char* vertPath, const char* fragPath) {
     int success;
     char infoLog[512];
 
-    // ¶¥µã×ÅÉ«Æ÷
+    // é¡¶ç‚¹ç€è‰²å™¨
     unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vSrc, nullptr);
     glCompileShader(vs);
@@ -50,7 +50,7 @@ unsigned int SunSystem::LoadShader(const char* vertPath, const char* fragPath) {
         std::cout << "ERROR::SUN_VERT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // Æ¬¶Î×ÅÉ«Æ÷
+    // ç‰‡æ®µç€è‰²å™¨
     unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs, 1, &fSrc, nullptr);
     glCompileShader(fs);
@@ -60,7 +60,7 @@ unsigned int SunSystem::LoadShader(const char* vertPath, const char* fragPath) {
         std::cout << "ERROR::SUN_FRAG::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-     // °Ñ×ÅÉ«Æ÷Á´½Óµ½³ÌĞòÖĞ
+     // æŠŠç€è‰²å™¨é“¾æ¥åˆ°ç¨‹åºä¸­
     unsigned int prog = glCreateProgram();
     glAttachShader(prog, vs);
     glAttachShader(prog, fs);
@@ -78,13 +78,13 @@ unsigned int SunSystem::LoadShader(const char* vertPath, const char* fragPath) {
 
 void SunSystem::Init(const char* vertPath, const char* fragPath) {
     // ---------------------------------------------------------
-    // 1. ¶¯Ì¬Éú³ÉÇòÌå¼¸ºÎÊı¾İ (UV Sphere Ëã·¨)
+    // 1. åŠ¨æ€ç”Ÿæˆçƒä½“å‡ ä½•æ•°æ® (UV Sphere ç®—æ³•)
     // ---------------------------------------------------------
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
-    const unsigned int X_SEGMENTS = 32; // ¾­¶ÈÏ¸·ÖÊı£¨ÊıÖµÔ½´óÔ½Ô²£©
-    const unsigned int Y_SEGMENTS = 32; // Î³¶ÈÏ¸·ÖÊı
+    const unsigned int X_SEGMENTS = 32; // ç»åº¦ç»†åˆ†æ•°ï¼ˆæ•°å€¼è¶Šå¤§è¶Šåœ†ï¼‰
+    const unsigned int Y_SEGMENTS = 32; // çº¬åº¦ç»†åˆ†æ•°
     const float PI = 3.14159265359f;
 
     for (unsigned int y = 0; y <= Y_SEGMENTS; ++y) {
@@ -92,7 +92,7 @@ void SunSystem::Init(const char* vertPath, const char* fragPath) {
             float xSegment = (float)x / (float)X_SEGMENTS;
             float ySegment = (float)y / (float)Y_SEGMENTS;
 
-            // Ê¹ÓÃÇòÃæ×ø±êÏµ¹«Ê½
+            // ä½¿ç”¨çƒé¢åæ ‡ç³»å…¬å¼
             float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
             float yPos = std::cos(ySegment * PI);
             float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
@@ -117,7 +117,7 @@ void SunSystem::Init(const char* vertPath, const char* fragPath) {
     indexCount = static_cast<unsigned int>(indices.size());
 
     // ---------------------------------------------------------
-    // 2. °ó¶¨ OpenGL »º³å (VAO / VBO / EBO)
+    // 2. ç»‘å®š OpenGL ç¼“å†² (VAO / VBO / EBO)
     // ---------------------------------------------------------
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -125,20 +125,20 @@ void SunSystem::Init(const char* vertPath, const char* fragPath) {
 
     glBindVertexArray(VAO);
 
-    // ¶¥µã»º³å
+    // é¡¶ç‚¹ç¼“å†²
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
-    // Ë÷Òı»º³å (·Ç³£¹Ø¼ü)
+    // ç´¢å¼•ç¼“å†² (éå¸¸å…³é”®)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // ÉèÖÃÊôĞÔ
+    // è®¾ç½®å±æ€§
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     // ---------------------------------------------------------
-    // 3. ¼ÓÔØ Shader (±£³ÖÄãÔ­ÓĞµÄÂß¼­)
+    // 3. åŠ è½½ Shader (ä¿æŒä½ åŸæœ‰çš„é€»è¾‘)
     // ---------------------------------------------------------
     shader = LoadShader(vertPath, fragPath);
     locModel = glGetUniformLocation(shader, "model");
@@ -146,85 +146,85 @@ void SunSystem::Init(const char* vertPath, const char* fragPath) {
     locProj = glGetUniformLocation(shader, "projection");
     locSunColor = glGetUniformLocation(shader, "sunColor");
 
-    // ¡¾ĞÂÔö¡¿»ñÈ¡Ç¿¶ÈºÍÏà»úÎ»ÖÃµÄ Uniform
+    // ã€æ–°å¢ã€‘è·å–å¼ºåº¦å’Œç›¸æœºä½ç½®çš„ Uniform
     glUseProgram(shader);
-    glUniform1f(glGetUniformLocation(shader, "sunIntensity"), 1.0f); // ¸ø¸öÄ¬ÈÏÖµ·ÀÖ¹Îª0
+    glUniform1f(glGetUniformLocation(shader, "sunIntensity"), 1.0f); // ç»™ä¸ªé»˜è®¤å€¼é˜²æ­¢ä¸º0
 
     glBindVertexArray(0);
 }
 
 void SunSystem::Update(float deltaTime, float timeSlider) {
-    // 1. ¼ÆËãÌ«ÑôµÄÔ­Ê¼¹ì¼£ (0.0=ÎçÒ¹, 0.5=ÕıÎç)
-    // angle: 0.0 -> -90¶È(ÏÂ), 0.5 -> 90¶È(ÉÏ)
+    // 1. è®¡ç®—å¤ªé˜³çš„åŸå§‹è½¨è¿¹ (0.0=åˆå¤œ, 0.5=æ­£åˆ)
+    // angle: 0.0 -> -90åº¦(ä¸‹), 0.5 -> 90åº¦(ä¸Š)
     float angle = (timeSlider * 2.0f * 3.14159265f) - 1.570796f;
     float y = std::sin(angle);
     float z = std::cos(angle);
 
-    // ÕæÊµµÄÌ«Ñô·½Ïò
+    // çœŸå®çš„å¤ªé˜³æ–¹å‘
     glm::vec3 sunDir = glm::normalize(glm::vec3(0.0f, y, z));
     float height = sunDir.y; // [-1, 1]
 
-    // --- ¶¨ÒåÑÕÉ« ---
-    glm::vec3 colorNoon = glm::vec3(1.0f, 1.0f, 0.98f);   // ÕıÎç£ºÁÁ°×
-    glm::vec3 colorSunset = glm::vec3(1.0f, 0.45f, 0.1f);   // ÈÕÂä£º³Èºì
-    glm::vec3 colorDark = glm::vec3(0.02f, 0.02f, 0.05f); // ºÚ°µÊ±¿Ì£º¼«°µÀ¶ºÚ
-    glm::vec3 colorMoon = glm::vec3(0.6f, 0.7f, 1.0f);    // ÔÂ¹â£ºÀäÀ¶°×
+    // --- å®šä¹‰é¢œè‰² ---
+    glm::vec3 colorNoon = glm::vec3(1.0f, 1.0f, 0.98f);   // æ­£åˆï¼šäº®ç™½
+    glm::vec3 colorSunset = glm::vec3(1.0f, 0.45f, 0.1f);   // æ—¥è½ï¼šæ©™çº¢
+    glm::vec3 colorDark = glm::vec3(0.02f, 0.02f, 0.05f); // é»‘æš—æ—¶åˆ»ï¼šææš—è“é»‘
+    glm::vec3 colorMoon = glm::vec3(0.6f, 0.7f, 1.0f);    // æœˆå…‰ï¼šå†·è“ç™½
 
-    // --- ×´Ì¬»úÂß¼­ ---
+    // --- çŠ¶æ€æœºé€»è¾‘ ---
 
-    // ãĞÖµ¶¨Òå£º
-    // height > 0.1 : °×Ìì
-    // height 0.1 ~ -0.1 : ÀèÃ÷/»Æ»è (¹âÏß¿ìËÙ±ä°µ)
-    // height -0.1 ~ -0.3 : ÖÁ°µÊ±¿Ì (Ì«ÑôÂäÏÂ£¬ÔÂÁÁ»¹Ã»ÉıÆğ/¸ÕÂäÏÂ)
-    // height < -0.3 : ÉîÒ¹ (ÔÂÁÁ¸ß¹Ò)
+    // é˜ˆå€¼å®šä¹‰ï¼š
+    // height > 0.1 : ç™½å¤©
+    // height 0.1 ~ -0.1 : é»æ˜/é»„æ˜ (å…‰çº¿å¿«é€Ÿå˜æš—)
+    // height -0.1 ~ -0.3 : è‡³æš—æ—¶åˆ» (å¤ªé˜³è½ä¸‹ï¼Œæœˆäº®è¿˜æ²¡å‡èµ·/åˆšè½ä¸‹)
+    // height < -0.3 : æ·±å¤œ (æœˆäº®é«˜æŒ‚)
 
     if (height > -0.15f) {
-        // === °×Ìì / »Æ»è Ä£Ê½ ===
+        // === ç™½å¤© / é»„æ˜ æ¨¡å¼ ===
 
-        // Éè¶¨Î»ÖÃÎªÌ«ÑôÎ»ÖÃ
+        // è®¾å®šä½ç½®ä¸ºå¤ªé˜³ä½ç½®
         direction = sunDir;
         worldPos = direction * 80.0f;
 
         if (height > 0.1f) {
-            // Õı³£°×Ìì
+            // æ­£å¸¸ç™½å¤©
             float t = std::min((height - 0.1f) / 0.4f, 1.0f);
             color = glm::mix(colorSunset, colorNoon, t);
             intensity = 1.0f + t * 0.3f; // 1.0 ~ 1.3
             ambient = 0.3f + t * 0.1f;   // 0.3 ~ 0.4
         }
         else {
-            // ÈÕ³ö/ÈÕÂä¹ı¶ÉÆÚ (height -0.15 ~ 0.1)
-            // ¹éÒ»»¯ t: 0(×î°µ) ~ 1(ÈÕÂäÉ«)
+            // æ—¥å‡º/æ—¥è½è¿‡æ¸¡æœŸ (height -0.15 ~ 0.1)
+            // å½’ä¸€åŒ– t: 0(æœ€æš—) ~ 1(æ—¥è½è‰²)
             float t = (height + 0.15f) / 0.25f;
             color = glm::mix(colorDark, colorSunset, t);
 
-            // Ç¿¶È¼±ËÙÏÂ½µ£¬ÖÆÔì"ÌìºÚÁË"µÄ¸Ğ¾õ
+            // å¼ºåº¦æ€¥é€Ÿä¸‹é™ï¼Œåˆ¶é€ "å¤©é»‘äº†"çš„æ„Ÿè§‰
             intensity = t * 0.8f;
             ambient = 0.05f + t * 0.25f;
         }
     }
     else {
-        // === ÉîÒ¹ / ÔÂÁÁ Ä£Ê½ ===
+        // === æ·±å¤œ / æœˆäº® æ¨¡å¼ ===
 
-        // ¹Ø¼üÂß¼­£ºµ±Ì«ÑôÂäµ½µØÆ½ÏßÒÔÏÂºÜÉîÊ±£¬ÎÒÃÇÈÃ"¹âÔ´"±ä³ÉÔÂÁÁ
-        // ÔÂÁÁÎ»ÖÃÍ¨³£ÔÚÌ«Ñô¶ÔÃæ (-sunDir)
+        // å…³é”®é€»è¾‘ï¼šå½“å¤ªé˜³è½åˆ°åœ°å¹³çº¿ä»¥ä¸‹å¾ˆæ·±æ—¶ï¼Œæˆ‘ä»¬è®©"å…‰æº"å˜æˆæœˆäº®
+        // æœˆäº®ä½ç½®é€šå¸¸åœ¨å¤ªé˜³å¯¹é¢ (-sunDir)
 
-        direction = -sunDir; // ·´×ª·½Ïò
+        direction = -sunDir; // åè½¬æ–¹å‘
         worldPos = direction * 80.0f;
 
-        // ¼ÆËãÔÂÁÁ¸ß¶È (×¢Òâ height ÊÇÌ«Ñô¸ß¶È£¬ÊÇ¸ºµÄ£¬ËùÒÔÔÂÁÁ¸ß¶ÈÊÇ -height)
+        // è®¡ç®—æœˆäº®é«˜åº¦ (æ³¨æ„ height æ˜¯å¤ªé˜³é«˜åº¦ï¼Œæ˜¯è´Ÿçš„ï¼Œæ‰€ä»¥æœˆäº®é«˜åº¦æ˜¯ -height)
         float moonHeight = -height;
 
         if (moonHeight > 0.3f) {
-            // ÔÂÁÁ¸ß¹Ò (ÉîÒ¹)
+            // æœˆäº®é«˜æŒ‚ (æ·±å¤œ)
             color = colorMoon;
-            intensity = 0.3f; // ÔÂ¹âÇ¿¶È½ÏµÍ (ÓªÔì·ÕÎ§£¬²»ÒªÌ«ÁÁ)
-            ambient = 0.1f;   // »·¾³¹âÀäÇÒ°µ
+            intensity = 0.3f; // æœˆå…‰å¼ºåº¦è¾ƒä½ (è¥é€ æ°›å›´ï¼Œä¸è¦å¤ªäº®)
+            ambient = 0.1f;   // ç¯å¢ƒå…‰å†·ä¸”æš—
         }
         else {
-            // ÔÂ³ö/ÔÂÂä¹ı¶É (ÖÁ°µÊ±¿Ì)
-            // ´ËÊ±Ì«Ñô¸ÕÏÂÈ¥£¬ÔÂÁÁ»¹Ã»ÍêÈ«ÉÏÀ´£¬»òÕß·´Ö®
-            float t = (moonHeight - 0.15f) / 0.15f; // ¹ı¶É
+            // æœˆå‡º/æœˆè½è¿‡æ¸¡ (è‡³æš—æ—¶åˆ»)
+            // æ­¤æ—¶å¤ªé˜³åˆšä¸‹å»ï¼Œæœˆäº®è¿˜æ²¡å®Œå…¨ä¸Šæ¥ï¼Œæˆ–è€…åä¹‹
+            float t = (moonHeight - 0.15f) / 0.15f; // è¿‡æ¸¡
             t = glm::clamp(t, 0.0f, 1.0f);
 
             color = glm::mix(colorDark, colorMoon, t);
@@ -239,7 +239,7 @@ void SunSystem::Render(Camera& camera) {
 
     glUseProgram(shader);
 
-    // ÉèÖÃ±ä»»¾ØÕó (±£³ÖÔ­Ñù)
+    // è®¾ç½®å˜æ¢çŸ©é˜µ (ä¿æŒåŸæ ·)
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 1280.0f / 720.0f, 0.1f, 300.0f);
 
@@ -247,7 +247,7 @@ void SunSystem::Render(Camera& camera) {
     if (locProj != -1) glUniformMatrix4fv(locProj, 1, GL_FALSE, &projection[0][0]);
     if (locSunColor != -1) glUniform3fv(locSunColor, 1, &color[0]);
 
-    // ±ØĞë´«µİÕâĞ©²ÎÊı£¬·ñÔòÌ«ÑôÔÚ Shader Àï¼ÆËã½á¹ûÎª 0 (ºÚÉ«)
+    // å¿…é¡»ä¼ é€’è¿™äº›å‚æ•°ï¼Œå¦åˆ™å¤ªé˜³åœ¨ Shader é‡Œè®¡ç®—ç»“æœä¸º 0 (é»‘è‰²)
     glUniform1f(glGetUniformLocation(shader, "sunIntensity"), intensity);
     glUniform3fv(glGetUniformLocation(shader, "viewPos"), 1, &camera.Position[0]);
 
@@ -257,7 +257,7 @@ void SunSystem::Render(Camera& camera) {
 
     if (locModel != -1) glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
 
-    // Ê¹ÓÃË÷Òı»æÍ¼
+    // ä½¿ç”¨ç´¢å¼•ç»˜å›¾
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
