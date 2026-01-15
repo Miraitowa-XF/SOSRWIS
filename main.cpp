@@ -314,7 +314,45 @@ int main()
     // 你需要利用之前写的“打印坐标”功能，走到墙边，记下坐标，然后在这里写代码
     // 例如：在广场中心加一堵空气墙
     // 参数：中心点(0, 2, -45)， 尺寸(宽10，高10，厚10)
+    // 喷泉的空气墙绘制
     addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(7.0f, 7.0f, 7.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(8.0f, 7.0f, 6.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(6.0f, 7.0f, 8.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(9.0f, 7.0f, 4.8f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(4.8f, 7.0f, 9.0f));
+    // 雕像空气墙绘制
+    addInvisibleWall(glm::vec3(-0.0f, 2.0f, -25.0f), glm::vec3(1.0f, 7.0f, 1.0f));
+    // 路灯空气墙绘制
+    addInvisibleWall(glm::vec3(-8.0f, 2.0f, -12.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(22.0f, 2.0f, 10.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(6.0f, 2.0f, -40.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(-17.0f, 2.0f, 15.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    // 圣诞树空气墙绘制
+    addInvisibleWall(glm::vec3(18.0f, 2.0f, -8.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(25.0f, 2.0f, -15.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(35.0f, 2.0f, -5.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(33.0f, 2.0f, -23.5f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -25.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    // 松树空气墙
+    addInvisibleWall(glm::vec3(25.0f, 2.0f, 25.0f), glm::vec3(5.5f, 20.0f, 5.5f));
+    // 雪人空气墙
+    addInvisibleWall(glm::vec3(-5.0f, 1.0f, -35.0f), glm::vec3(1.2f, 2.0f, 1.2f));
+    // 楼栋前的雪人空气墙
+    addInvisibleWall(glm::vec3(-17.0f, 2.0f, -14.0f), glm::vec3(1.5f, 4.0f, 1.5f));
+    // 邮箱空气墙
+    addInvisibleWall(glm::vec3(5.0f, 1.0f, -35.0f), glm::vec3(0.5f, 2.0f, 0.5f));
+    // 桌子空气墙
+    addInvisibleWall(glm::vec3(18.0f, 0.0f, 10.0f), glm::vec3(4.0f, 2.0f, 3.0f));
+    // 水井空气墙
+    addInvisibleWall(glm::vec3(34.7f, 1.0f, 15.0f), glm::vec3(1.5f, 2.0f, 1.5f));
+    // 圣诞树旁边人物 
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -14.0f), glm::vec3(3.0f, 4.0f, 1.5f));
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -17.0f), glm::vec3(0.5f, 4.0f, 0.8f));
+    addInvisibleWall(glm::vec3(15.0f, 1.0f, -19.0f), glm::vec3(0.7f, 2.0f, 0.3f));
+    // 勇士
+    addInvisibleWall(glm::vec3(10.0f, 2.0f, -30.0f), glm::vec3(1.2f, 6.0f, 0.5f));
+    
+
 
     // 初始化下雪场景
     initSnowyScene();
