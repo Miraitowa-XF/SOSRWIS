@@ -15,8 +15,22 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     try
     {
         // 打开文件
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
+        vShaderFile.open(vertexPath, std::ios::binary); // 【关键】二进制模式
+        fShaderFile.open(fragmentPath, std::ios::binary);
+
+        // --- 【插入】跳过 Vertex Shader 的 BOM ---
+        unsigned char bom[3] = { 0 };
+        vShaderFile.read(reinterpret_cast<char*>(bom), 3);
+        if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+            vShaderFile.seekg(0); // 不是BOM，倒带回开头
+        }
+
+        // --- 【插入】跳过 Fragment Shader 的 BOM ---
+        fShaderFile.read(reinterpret_cast<char*>(bom), 3);
+        if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+            fShaderFile.seekg(0); // 不是BOM，倒带回开头
+        }
+
         std::stringstream vShaderStream, fShaderStream;
         // 读取文件的缓冲内容到数据流中
         vShaderStream << vShaderFile.rdbuf();
