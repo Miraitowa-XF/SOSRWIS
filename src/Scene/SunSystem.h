@@ -1,4 +1,4 @@
-#ifndef SUN_SYSTEM_H
+ï»¿#ifndef SUN_SYSTEM_H
 #define SUN_SYSTEM_H
 
 #include <glm/glm.hpp>
@@ -8,18 +8,18 @@
 
 class SunSystem {
 public:
-    // --- ¹¹Ôìº¯Êı ---
-    SunSystem(); // Ìí¼Ó¹¹Ôìº¯ÊıÓÃÓÚ³õÊ¼»¯ÊôĞÔ
+    // --- æ„é€ å‡½æ•° ---
+    SunSystem(); // æ·»åŠ æ„é€ å‡½æ•°ç”¨äºåˆå§‹åŒ–å±æ€§
 
-    // --- Ì«ÑôµÄÎïÀíÊôĞÔ£¨¹©Íâ²¿¶ÁÈ¡¸øÖ÷ShaderÊ¹ÓÃ£© ---
-    glm::vec3 direction;   // Ì«Ñô¹âµÄ·½Ïò
-    glm::vec3 worldPos;    // Ì«ÑôÔÚÊÀ½ç¿Õ¼äµÄÎ»ÖÃ
-    glm::vec3 color;       // Ì«Ñô¹âµÄÊµÊ±ÑÕÉ«
-    float intensity;       // ¹âÕÕÇ¿¶È
-    float ambient;         // »·¾³¹âÇ¿¶È
-	bool isDay; 		 // ÊÇ·ñÎª°×Ìì(¿ÉÑ¡)
+    // --- å¤ªé˜³çš„ç‰©ç†å±æ€§ï¼ˆä¾›å¤–éƒ¨è¯»å–ç»™ä¸»Shaderä½¿ç”¨ï¼‰ ---
+    glm::vec3 direction;   // å¤ªé˜³å…‰çš„æ–¹å‘
+    glm::vec3 worldPos;    // å¤ªé˜³åœ¨ä¸–ç•Œç©ºé—´çš„ä½ç½®
+    glm::vec3 color;       // å¤ªé˜³å…‰çš„å®æ—¶é¢œè‰²
+    float intensity;       // å…‰ç…§å¼ºåº¦
+    float ambient;         // ç¯å¢ƒå…‰å¼ºåº¦
+	bool isDay; 		 // æ˜¯å¦ä¸ºç™½å¤©(å¯é€‰)
 
-    // --- ÏµÍ³½Ó¿Ú ---
+    // --- ç³»ç»Ÿæ¥å£ ---
     void Init(const char* vertPath, const char* fragPath);
     void Update(float deltaTime, float timeSlider);
     void Render(Camera& camera);
@@ -30,10 +30,10 @@ private:
     unsigned int VAO = 0, VBO = 0;
     unsigned int shader = 0;
 
-    unsigned int indexCount = 0; // ĞÂÔö£º¼ÇÂ¼ÇòÌåÓĞ¶àÉÙ¸öË÷Òıµã
-    unsigned int EBO = 0;        // ĞÂÔö£ºË÷Òı»º³å¶ÔÏó
+    unsigned int indexCount = 0; // æ–°å¢ï¼šè®°å½•çƒä½“æœ‰å¤šå°‘ä¸ªç´¢å¼•ç‚¹
+    unsigned int EBO = 0;        // æ–°å¢ï¼šç´¢å¼•ç¼“å†²å¯¹è±¡
 
-    // Uniform »º´æ
+    // Uniform ç¼“å­˜
     GLint locView = -1;
     GLint locProj = -1;
     GLint locModel = -1;

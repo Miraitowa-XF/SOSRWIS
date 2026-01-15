@@ -1,17 +1,17 @@
-#pragma once
+ï»¿#pragma once
 #include <glm/glm.hpp>
 #include <algorithm> // for min/max
 
 struct AABB {
-    glm::vec3 min; // ºĞ×Ó×óÏÂºó½Ç
-    glm::vec3 max; // ºĞ×ÓÓÒÉÏÇ°½Ç
+    glm::vec3 min; // ç›’å­å·¦ä¸‹åè§’
+    glm::vec3 max; // ç›’å­å³ä¸Šå‰è§’
 
-    // Ä¬ÈÏ¹¹Ôì
+    // é»˜è®¤æ„é€ 
     AABB() : min(0.0f), max(0.0f) {}
-    // ¹¹Ôìº¯Êı
+    // æ„é€ å‡½æ•°
     AABB(glm::vec3 _min, glm::vec3 _max) : min(_min), max(_max) {}
 
-    // ¼ì²âÁ½¸öºĞ×ÓÊÇ·ñÖØµş (AABB Collision)
+    // æ£€æµ‹ä¸¤ä¸ªç›’å­æ˜¯å¦é‡å  (AABB Collision)
     bool checkCollision(const AABB& other) const {
         return (min.x <= other.max.x && max.x >= other.min.x) &&
             (min.y <= other.max.y && max.y >= other.min.y) &&

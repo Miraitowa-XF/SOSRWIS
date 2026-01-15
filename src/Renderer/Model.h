@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <glad/glad.h> 
 #include <glm/glm.hpp>
@@ -18,28 +18,28 @@
 class Model
 {
 public:
-    // ´æ´¢ËùÓĞµÄÍø¸ñ
+    // å­˜å‚¨æ‰€æœ‰çš„ç½‘æ ¼
     std::vector<Mesh> meshes;
     std::string directory;
-    std::vector<Texture> textures_loaded; // »º´æÒÑ¼ÓÔØµÄÎÆÀí
+    std::vector<Texture> textures_loaded; // ç¼“å­˜å·²åŠ è½½çš„çº¹ç†
 
-    // ¹¹Ôìº¯Êı£ºÖ±½Ó´«ÈëÂ·¾¶¼ÓÔØ
+    // æ„é€ å‡½æ•°ï¼šç›´æ¥ä¼ å…¥è·¯å¾„åŠ è½½
     Model(std::string const& path, bool gamma = false);
 
-    // »æÖÆÄ£ĞÍ
+    // ç»˜åˆ¶æ¨¡å‹
     void Draw(Shader& shader);
 
 private:
     bool gammaCorrection;
-    // ¼ÓÔØÄ£ĞÍº¯Êı
+    // åŠ è½½æ¨¡å‹å‡½æ•°
     void loadModel(std::string const& path);
 
-    // µİ¹é´¦Àí½Úµã
+    // é€’å½’å¤„ç†èŠ‚ç‚¹
     void processNode(aiNode* node, const aiScene* scene);
 
-    // ½« Assimp µÄ mesh ×ª»»ÎªÎÒÃÇµÄ Mesh
+    // å°† Assimp çš„ mesh è½¬æ¢ä¸ºæˆ‘ä»¬çš„ Mesh
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 
-    // ¼ÓÔØ²ÄÖÊÎÆÀí
+    // åŠ è½½æè´¨çº¹ç†
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 };

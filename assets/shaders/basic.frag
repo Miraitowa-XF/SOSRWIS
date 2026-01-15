@@ -1,26 +1,26 @@
-#version 330 core
+ï»¿#version 330 core
 out vec4 FragColor;
 
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
-// ¡¾ĞÂÔö¡¿½ÓÊÕ¹â¿Õ¼ä×ø±ê£¨ÓÃÓÚ²éÒõÓ°Í¼£©
+// ã€æ–°å¢ã€‘æ¥æ”¶å…‰ç©ºé—´åæ ‡ï¼ˆç”¨äºæŸ¥é˜´å½±å›¾ï¼‰
 in vec4 FragPosLightSpace; 
 
-// ÎÆÀí²ÉÑùÆ÷
+// çº¹ç†é‡‡æ ·å™¨
 uniform sampler2D texture_diffuse1;
-// ¡¾ĞÂÔö¡¿Éî¶ÈÌùÍ¼£¨ÒõÓ°Í¼£©
+// ã€æ–°å¢ã€‘æ·±åº¦è´´å›¾ï¼ˆé˜´å½±å›¾ï¼‰
 uniform sampler2D shadowMap; 
 
-// ¶¯Ì¬Ì«Ñô²ÎÊı
-uniform vec3 lightPos;           // Ì«Ñô¹âµÄ·½ÏòÏòÁ¿
-uniform vec3 lightColor;         // Ì«ÑôµÄÊµÊ±ÑÕÉ«
-uniform float sunIntensity;    // Ì«ÑôµÄÊµÊ±Ç¿¶È
-uniform float ambientStrength; // ÊµÊ±»·¾³¹â
+// åŠ¨æ€å¤ªé˜³å‚æ•°
+uniform vec3 lightPos;           // å¤ªé˜³å…‰çš„æ–¹å‘å‘é‡
+uniform vec3 lightColor;         // å¤ªé˜³çš„å®æ—¶é¢œè‰²
+uniform float sunIntensity;    // å¤ªé˜³çš„å®æ—¶å¼ºåº¦
+uniform float ambientStrength; // å®æ—¶ç¯å¢ƒå…‰
 uniform vec3 viewPos;
 
-// --- ¡¾ĞÂÔö¡¿Â·µÆ (µã¹âÔ´) ---
-#define NR_POINT_LIGHTS 4  // ¶¨ÒåÂ·µÆÊıÁ¿£º4Õµ
+// --- ã€æ–°å¢ã€‘è·¯ç¯ (ç‚¹å…‰æº) ---
+#define NR_POINT_LIGHTS 4  // å®šä¹‰è·¯ç¯æ•°é‡ï¼š4ç›
 struct PointLight {
     vec3 position;
     vec3 color;
@@ -29,69 +29,69 @@ struct PointLight {
     float linear;
     float quadratic;
 };
-uniform PointLight pointLights[NR_POINT_LIGHTS]; // Êı×é
-uniform bool lampOn;     // ¿ª¹Ø×´Ì¬
+uniform PointLight pointLights[NR_POINT_LIGHTS]; // æ•°ç»„
+uniform bool lampOn;     // å¼€å…³çŠ¶æ€
 
 // ==========================================================
-// ÒõÓ°¼ÆËãº¯Êı
-// ·µ»ØÖµ: 1.0 ±íÊ¾ÔÚÒõÓ°ÖĞ(È«ºÚ)£¬0.0 ±íÊ¾²»ÔÚÒõÓ°ÖĞ(ÁÁ)
+// é˜´å½±è®¡ç®—å‡½æ•°
+// è¿”å›å€¼: 1.0 è¡¨ç¤ºåœ¨é˜´å½±ä¸­(å…¨é»‘)ï¼Œ0.0 è¡¨ç¤ºä¸åœ¨é˜´å½±ä¸­(äº®)
 // ==========================================================
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
-    // 1. Ö´ĞĞÍ¸ÊÓ³ı·¨ (½«×ø±ê±ä»»µ½ [-1,1] ·¶Î§)
+    // 1. æ‰§è¡Œé€è§†é™¤æ³• (å°†åæ ‡å˜æ¢åˆ° [-1,1] èŒƒå›´)
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     
-    // 2. ±ä»»µ½ [0,1] µÄ·¶Î§ (ÒòÎªÉî¶ÈÍ¼ÊÇ 0 µ½ 1)
+    // 2. å˜æ¢åˆ° [0,1] çš„èŒƒå›´ (å› ä¸ºæ·±åº¦å›¾æ˜¯ 0 åˆ° 1)
     projCoords = projCoords * 0.5 + 0.5;
     
-    // 3. Èç¹û³¬¹ıÁËÉî¶ÈÍ¼µÄ·¶Î§(±ÈÈçÔ¶´¦µÄµØÃæ)£¬¾Í²»¼ÆËãÒõÓ°£¬ÉèÎª 0
+    // 3. å¦‚æœè¶…è¿‡äº†æ·±åº¦å›¾çš„èŒƒå›´(æ¯”å¦‚è¿œå¤„çš„åœ°é¢)ï¼Œå°±ä¸è®¡ç®—é˜´å½±ï¼Œè®¾ä¸º 0
     if(projCoords.z > 1.0)
         return 0.0;
         
-    // 4. »ñÈ¡µ±Ç°Æ¬¶ÎµÄÉî¶È (µ±Ç°ÏñËØ¾àÀë¹âÔ´µÄ¾àÀë)
+    // 4. è·å–å½“å‰ç‰‡æ®µçš„æ·±åº¦ (å½“å‰åƒç´ è·ç¦»å…‰æºçš„è·ç¦»)
     float currentDepth = projCoords.z;
     
-    // 5. ¼ÆËãÆ«ÖÃ (Shadow Bias) - ·Ç³£ÖØÒª£¡½â¾ö¡°ÒõÓ°²¨ÎÆ(Acne)¡±
-    // ¸ù¾İ¹âÏß½Ç¶È¶¯Ì¬µ÷ÕûÆ«ÖÃÁ¿
+    // 5. è®¡ç®—åç½® (Shadow Bias) - éå¸¸é‡è¦ï¼è§£å†³â€œé˜´å½±æ³¢çº¹(Acne)â€
+    // æ ¹æ®å…‰çº¿è§’åº¦åŠ¨æ€è°ƒæ•´åç½®é‡
     float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);  
 
-    // 6. PCF (Percentage-Closer Filtering) Èá»¯ÒõÓ°
-    // ²ÉÑùÖÜÎ§ 9 ¸öµãÈ¡Æ½¾ùÖµ£¬ÈÃÒõÓ°±ßÔµ²»ÄÇÃ´¾â³İ
+    // 6. PCF (Percentage-Closer Filtering) æŸ”åŒ–é˜´å½±
+    // é‡‡æ ·å‘¨å›´ 9 ä¸ªç‚¹å–å¹³å‡å€¼ï¼Œè®©é˜´å½±è¾¹ç¼˜ä¸é‚£ä¹ˆé”¯é½¿
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // ¼ÆËãµ¥¸öÎÆÀíÏñËØµÄ´óĞ¡
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // è®¡ç®—å•ä¸ªçº¹ç†åƒç´ çš„å¤§å°
     for(int x = -1; x <= 1; ++x)
     {
         for(int y = -1; y <= 1; ++y)
         {
-            // ¶ÁÈ¡Éî¶ÈÍ¼ÉÏÖÜÎ§ÏñËØµÄÉî¶ÈÖµ
+            // è¯»å–æ·±åº¦å›¾ä¸Šå‘¨å›´åƒç´ çš„æ·±åº¦å€¼
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            // ±È½ÏÉî¶È£ºÈç¹ûµ±Ç°Éî¶È > ¼ÇÂ¼µÄÉî¶È£¬ËµÃ÷±»µ²×¡ÁË
+            // æ¯”è¾ƒæ·±åº¦ï¼šå¦‚æœå½“å‰æ·±åº¦ > è®°å½•çš„æ·±åº¦ï¼Œè¯´æ˜è¢«æŒ¡ä½äº†
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
         }    
     }
-    shadow /= 9.0; // È¡Æ½¾ù
+    shadow /= 9.0; // å–å¹³å‡
     
     return shadow;
 }
 
-// ĞÂÔö£º¼ÆËãµ¥¸öµã¹âÔ´µÄº¯Êı
+// æ–°å¢ï¼šè®¡ç®—å•ä¸ªç‚¹å…‰æºçš„å‡½æ•°
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 objectColor)
 {
     vec3 lightDir = normalize(light.position - fragPos);
     
-    // Âş·´Éä
+    // æ¼«åå°„
     float diff = max(dot(normal, lightDir), 0.0);
-    // ¾µÃæ·´Éä
+    // é•œé¢åå°„
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     
-    // Ë¥¼õ
+    // è¡°å‡
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
 
-    // ºÏ²¢
+    // åˆå¹¶
     vec3 diffuse = light.color * diff * objectColor;
-    vec3 specular = light.color * spec * 0.5; // 0.5ÊÇ¾µÃæÇ¿¶È
+    vec3 specular = light.color * spec * 0.5; // 0.5æ˜¯é•œé¢å¼ºåº¦
     
     diffuse *= attenuation;
     specular *= attenuation;
@@ -108,12 +108,12 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
 
     // =======================================================
-    // 1. ¼ÆËãÌ«Ñô/ÔÂÁÁ¹âÕÕ (»ù´¡»·¾³¹âÔÚÕâÀï¼ÆËã)
+    // 1. è®¡ç®—å¤ªé˜³/æœˆäº®å…‰ç…§ (åŸºç¡€ç¯å¢ƒå…‰åœ¨è¿™é‡Œè®¡ç®—)
     // =======================================================
     vec3 sunLightDir = normalize(lightPos - FragPos);
     
-    // ¡¾ĞŞ¸´ 1¡¿Ö±½ÓÊ¹ÓÃ´«ÈëµÄ ambientStrength£¬²»ÔÙ³ËÒÔ 0.4
-    // ÕâÑù SunSystem ÀïµÄ 0.03 (ÉîÒ¹) ¾Í»áÉúĞ§£¬ºÚÒ¹»á±äµÃºÜºÚ
+    // ã€ä¿®å¤ 1ã€‘ç›´æ¥ä½¿ç”¨ä¼ å…¥çš„ ambientStrengthï¼Œä¸å†ä¹˜ä»¥ 0.4
+    // è¿™æ · SunSystem é‡Œçš„ 0.03 (æ·±å¤œ) å°±ä¼šç”Ÿæ•ˆï¼Œé»‘å¤œä¼šå˜å¾—å¾ˆé»‘
     vec3 ambient = ambientStrength * lightColor; 
     
     float diff = max(dot(norm, sunLightDir), 0.0);
@@ -127,13 +127,13 @@ void main()
     vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * objectColor;
 
     // =======================================================
-    // 2. ¡¾Éı¼¶¡¿¼ÆËã 4 ÕµÂ·µÆ
+    // 2. ã€å‡çº§ã€‘è®¡ç®— 4 ç›è·¯ç¯
     // =======================================================
-    if(lampOn) // ×Ü¿ª¹Ø
+    if(lampOn) // æ€»å¼€å…³
     {
         for(int i = 0; i < NR_POINT_LIGHTS; i++)
         {
-            // µş¼ÓÃ¿Ò»ÕµµÆµÄ¹âÕÕ¹±Ï×
+            // å åŠ æ¯ä¸€ç›ç¯çš„å…‰ç…§è´¡çŒ®
             result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, objectColor);
         }
     }

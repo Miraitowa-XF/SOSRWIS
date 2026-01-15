@@ -1,4 +1,4 @@
-#version 330 core
+ï»¿#version 330 core
 out vec4 FragColor;
 
 in vec3 TexCoords;
@@ -7,13 +7,13 @@ uniform samplerCube skybox;
 
 void main()
 {
-    // 1. ²ÉÑùÎÆÀíÑÕÉ«
+    // 1. é‡‡æ ·çº¹ç†é¢œè‰²
     vec4 texColor = texture(skybox, TexCoords);
 
-    // 2. µ÷ÕûÁÁ¶ÈÏµÊı (0.0 ~ 1.0)
-    // 0.5 ±íÊ¾ÁÁ¶È¼õ°ë£¬0.2 ±íÊ¾ºÜ°µ£¬1.0 ÊÇÔ­Í¼
+    // 2. è°ƒæ•´äº®åº¦ç³»æ•° (0.0 ~ 1.0)
+    // 0.5 è¡¨ç¤ºäº®åº¦å‡åŠï¼Œ0.2 è¡¨ç¤ºå¾ˆæš—ï¼Œ1.0 æ˜¯åŸå›¾
     float factor = 0.5; 
 
-    // 3. Êä³ö±ä°µºóµÄÑÕÉ«
+    // 3. è¾“å‡ºå˜æš—åçš„é¢œè‰²
     FragColor = texColor * factor;
 }

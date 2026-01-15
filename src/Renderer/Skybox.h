@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <glad/glad.h>
 #include <vector>
@@ -11,17 +11,17 @@
 class Skybox
 {
 public:
-    // ¹¹Ôìº¯Êı£º´«Èë°üº¬6ÕÅÍ¼Æ¬Â·¾¶µÄ vector
+    // æ„é€ å‡½æ•°ï¼šä¼ å…¥åŒ…å«6å¼ å›¾ç‰‡è·¯å¾„çš„ vector
     Skybox(std::vector<std::string> faces);
 
-    // »æÖÆº¯Êı
+    // ç»˜åˆ¶å‡½æ•°
     void Draw(const glm::mat4& view, const glm::mat4& projection);
 
 private:
     unsigned int skyboxVAO, skyboxVBO;
     unsigned int textureID;
-    Shader* skyboxShader; // Ìì¿ÕºĞ×¨ÓÃµÄ Shader
+    Shader* skyboxShader; // å¤©ç©ºç›’ä¸“ç”¨çš„ Shader
 
-    // ¼ÓÔØ CubeMap µÄ¸¨Öúº¯Êı
+    // åŠ è½½ CubeMap çš„è¾…åŠ©å‡½æ•°
     unsigned int loadCubemap(std::vector<std::string> faces);
 };

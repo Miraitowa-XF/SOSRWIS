@@ -1,11 +1,11 @@
-#version 330 core
+ï»¿#version 330 core
 layout (location = 0) in vec3 aPos;
 
-uniform mat4 lightSpaceMatrix; // ¹âÔ´ÊÓ½ÇµÄ Í¶Ó° * ÊÓÍ¼ ¾ØÕó
-uniform mat4 model;            // Ä£ĞÍ¾ØÕó
+uniform mat4 lightSpaceMatrix; // å…‰æºè§†è§’çš„ æŠ•å½± * è§†å›¾ çŸ©é˜µ
+uniform mat4 model;            // æ¨¡å‹çŸ©é˜µ
 
 void main()
 {
-    // ½«¶¥µã×ª»»µ½¹â¿Õ¼ä
+    // å°†é¡¶ç‚¹è½¬æ¢åˆ°å…‰ç©ºé—´
     gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
 }

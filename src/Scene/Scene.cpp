@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 #include "Core/Camera.h"
 
 void SnowScene::Init(const char* vertPath, const char* fragPath, const char* texturePath) {

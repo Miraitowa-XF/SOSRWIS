@@ -1,23 +1,23 @@
-#include "Camera.h"
+ï»¿#include "Camera.h"
 #include <cmath>
 
-// Ğ¡µÄÊıÖµ°²È«±£»¤
+// å°çš„æ•°å€¼å®‰å…¨ä¿æŠ¤
 static inline float clampf(float v, float lo, float hi) {
     if (v < lo) return lo;
     if (v > hi) return hi;
     return v;
 }
 
-// Ö¸ÊıÆ½»¬²ÎÊı×ª»»£º ½«¡°ËÙ¶È£¨Ã¿Ãë£©¡± ºÍ deltaTime ×ª»»Îª²åÖµÒò×Ó alpha£¨0..1£©
-// Ê¹ÓÃ¹«Ê½ alpha = 1 - exp(-speed * deltaTime)
-// ÕâÑù¿ÉÒÔ»ñµÃÖ¡ÂÊÎŞ¹ØµÄÆ½»¬ĞĞÎª£ºspeed Ô½´óÏìÓ¦Ô½¿ì£¨¸ü½Ó½ü¼´Ê±£©£¬speed Ô½Ğ¡Ô½Æ½»¬
+// æŒ‡æ•°å¹³æ»‘å‚æ•°è½¬æ¢ï¼š å°†â€œé€Ÿåº¦ï¼ˆæ¯ç§’ï¼‰â€ å’Œ deltaTime è½¬æ¢ä¸ºæ’å€¼å› å­ alphaï¼ˆ0..1ï¼‰
+// ä½¿ç”¨å…¬å¼ alpha = 1 - exp(-speed * deltaTime)
+// è¿™æ ·å¯ä»¥è·å¾—å¸§ç‡æ— å…³çš„å¹³æ»‘è¡Œä¸ºï¼šspeed è¶Šå¤§å“åº”è¶Šå¿«ï¼ˆæ›´æ¥è¿‘å³æ—¶ï¼‰ï¼Œspeed è¶Šå°è¶Šå¹³æ»‘
 static inline float smoothingAlpha(float speed, float deltaTime) {
     if (speed <= 0.0f) return 0.0f;
-    // ·ÀÖ¹ deltaTime Ì«´óµ¼ÖÂ exp ÏÂÒç²îÒì£¬Í¨³£ deltaTime <= 0.1
+    // é˜²æ­¢ deltaTime å¤ªå¤§å¯¼è‡´ exp ä¸‹æº¢å·®å¼‚ï¼Œé€šå¸¸ deltaTime <= 0.1
     return 1.0f - std::exp(-speed * deltaTime);
 }
 
-// ---------------------- ¹¹Ôì ----------------------
+// ---------------------- æ„é€  ----------------------
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     : Position(position),
     WorldUp(up),
@@ -29,51 +29,51 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     MouseSensitivity(DEFAULT_SENSITIVITY),
     Zoom(DEFAULT_ZOOM),
     TargetZoom(DEFAULT_ZOOM),
-    RotationSmoothSpeed(12.0f), // ½¨Òé 8~20£¬Ô½´óÔ½¿ì£¨½Ó½ü¼´Ê±£©£¬Ô½Ğ¡Ô½Æ½»¬
-    ZoomSmoothSpeed(12.0f)      // Ëõ·ÅÒ²×öÆ½»¬£¨¿Éµ÷£©
+    RotationSmoothSpeed(12.0f), // å»ºè®® 8~20ï¼Œè¶Šå¤§è¶Šå¿«ï¼ˆæ¥è¿‘å³æ—¶ï¼‰ï¼Œè¶Šå°è¶Šå¹³æ»‘
+    ZoomSmoothSpeed(12.0f)      // ç¼©æ”¾ä¹Ÿåšå¹³æ»‘ï¼ˆå¯è°ƒï¼‰
 {
     updateCameraVectors();
 }
 
-// ---------------------- Update£¨Ã¿Ö¡µ÷ÓÃ£© ----------------------
+// ---------------------- Updateï¼ˆæ¯å¸§è°ƒç”¨ï¼‰ ----------------------
 void Camera::Update(float deltaTime)
 {
     if (deltaTime <= 0.0f) return;
 
-    // ¼ÆËã½Ç¶ÈÆ½»¬²åÖµÏµÊı£¨frame-rate independent£©
+    // è®¡ç®—è§’åº¦å¹³æ»‘æ’å€¼ç³»æ•°ï¼ˆframe-rate independentï¼‰
     float alpha = smoothingAlpha(RotationSmoothSpeed, deltaTime);
 
-    // Æ½»¬µØ±Æ½üÄ¿±ê½Ç¶È
-    // ´¦Àí½Ç¶È¿ç 360 µÄÇé¿ö£ºÎÒÃÇ°´¼òµ¥·½Ê½´¦Àí£¨Yaw Ò»°ã²»³¬´ó£©
+    // å¹³æ»‘åœ°é€¼è¿‘ç›®æ ‡è§’åº¦
+    // å¤„ç†è§’åº¦è·¨ 360 çš„æƒ…å†µï¼šæˆ‘ä»¬æŒ‰ç®€å•æ–¹å¼å¤„ç†ï¼ˆYaw ä¸€èˆ¬ä¸è¶…å¤§ï¼‰
     Yaw = Yaw + (TargetYaw - Yaw) * alpha;
     Pitch = Pitch + (TargetPitch - Pitch) * alpha;
 
-    // ÏŞÖÆ Pitch µ½°²È«·¶Î§£¬±ÜÃâ·­×ª
+    // é™åˆ¶ Pitch åˆ°å®‰å…¨èŒƒå›´ï¼Œé¿å…ç¿»è½¬
     Pitch = clampf(Pitch, -89.0f, 89.0f);
 
-    // Ëõ·ÅÆ½»¬£¨¿ÉÑ¡£©
+    // ç¼©æ”¾å¹³æ»‘ï¼ˆå¯é€‰ï¼‰
     float alphaZoom = smoothingAlpha(ZoomSmoothSpeed, deltaTime);
     Zoom = Zoom + (TargetZoom - Zoom) * alphaZoom;
     Zoom = clampf(Zoom, 1.0f, 90.0f);
 
-    // ¸üĞÂ·½ÏòÏòÁ¿
+    // æ›´æ–°æ–¹å‘å‘é‡
     updateCameraVectors();
 }
 
-// ---------------------- »ñÈ¡ÊÓÍ¼¾ØÕó ----------------------
+// ---------------------- è·å–è§†å›¾çŸ©é˜µ ----------------------
 glm::mat4 Camera::GetViewMatrix() const
 {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-// ---------------------- ¼üÅÌÒÆ¶¯ ----------------------
+// ---------------------- é”®ç›˜ç§»åŠ¨ ----------------------
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     float velocity = MovementSpeed * deltaTime;
 
     if (FPS_Mode)
     {
-        // FPS Ä£Ê½£ºÖ»ÄÜÔÚ XZ Æ½ÃæÉÏÒÆ¶¯
+        // FPS æ¨¡å¼ï¼šåªèƒ½åœ¨ XZ å¹³é¢ä¸Šç§»åŠ¨
         if (direction == FORWARD)
             Position += glm::normalize(glm::vec3(Front.x, 0.0f, Front.z)) * velocity;
         if (direction == BACKWARD)
@@ -83,12 +83,12 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
         if (direction == RIGHT)
             Position += glm::normalize(glm::vec3(Right.x, 0.0f, Right.z)) * velocity;
 
-        // Ç¿ÖÆËø¶¨¸ß¶È (Ä£ÄâÖØÁ¦)
+        // å¼ºåˆ¶é”å®šé«˜åº¦ (æ¨¡æ‹Ÿé‡åŠ›)
         Position.y = GroundHeight;
     }
     else
     {
-        // ÉÏµÛÄ£Ê½£º×ÔÓÉ·ÉÏè (Ô­´úÂë)
+        // ä¸Šå¸æ¨¡å¼ï¼šè‡ªç”±é£ç¿” (åŸä»£ç )
         if (direction == FORWARD) Position += Front * velocity;
         if (direction == BACKWARD) Position -= Front * velocity;
         if (direction == LEFT) Position -= Right * velocity;
@@ -98,20 +98,20 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
     }
 }
 
-// ---------------------- Êó±êÒÆ¶¯ ----------------------
+// ---------------------- é¼ æ ‡ç§»åŠ¨ ----------------------
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
-    // 1. ÁéÃô¶È
+    // 1. çµæ•åº¦
     xoffset *= MouseSensitivity;
     yoffset *= MouseSensitivity;
 
-    // 2. ÏŞÖÆµ¥Ö¡×î´óĞı×ª½Ç¶È£¨µ¥Î»£º¶È£©
+    // 2. é™åˆ¶å•å¸§æœ€å¤§æ—‹è½¬è§’åº¦ï¼ˆå•ä½ï¼šåº¦ï¼‰
     const float MAX_ROT_PER_FRAME = 2.5f;
 
     xoffset = glm::clamp(xoffset, -MAX_ROT_PER_FRAME, MAX_ROT_PER_FRAME);
     yoffset = glm::clamp(yoffset, -MAX_ROT_PER_FRAME, MAX_ROT_PER_FRAME);
 
-    // 3. ¸üĞÂÄ¿±ê½Ç¶È
+    // 3. æ›´æ–°ç›®æ ‡è§’åº¦
     TargetYaw += xoffset;
     TargetPitch += yoffset;
 
@@ -120,58 +120,58 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPi
 }
 
 
-// ---------------------- Êó±ê¹öÂÖ ----------------------
+// ---------------------- é¼ æ ‡æ»šè½® ----------------------
 void Camera::ProcessMouseScroll(float yoffset)
 {
-    // ½«¹öÂÖÖ±½ÓÓ³Éäµ½Ä¿±êËõ·Å£¨¿ÉÆ½»¬µ½ Zoom£©
-    // ³£¼û×ö·¨£º¼õĞ¡ yoffset -> ËõĞ¡ÊÓ½Ç -> ·Å´ó³¡¾°
+    // å°†æ»šè½®ç›´æ¥æ˜ å°„åˆ°ç›®æ ‡ç¼©æ”¾ï¼ˆå¯å¹³æ»‘åˆ° Zoomï¼‰
+    // å¸¸è§åšæ³•ï¼šå‡å° yoffset -> ç¼©å°è§†è§’ -> æ”¾å¤§åœºæ™¯
     TargetZoom -= yoffset;
     TargetZoom = clampf(TargetZoom, 1.0f, 90.0f);
 }
 
-// ---------------------- ¸üĞÂ·½ÏòÏòÁ¿ ----------------------
+// ---------------------- æ›´æ–°æ–¹å‘å‘é‡ ----------------------
 void Camera::updateCameraVectors()
 {
-    // ´ÓÅ·À­½Ç¼ÆËã Front ÏòÁ¿
+    // ä»æ¬§æ‹‰è§’è®¡ç®— Front å‘é‡
     glm::vec3 front;
     front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     front.y = sin(glm::radians(Pitch));
     front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     Front = glm::normalize(front);
 
-    // ÓÒÏòºÍÉÏÏò
+    // å³å‘å’Œä¸Šå‘
     Right = glm::normalize(glm::cross(Front, WorldUp));
     Up = glm::normalize(glm::cross(Right, Front));
 }
 
 void Camera::ProcessMouseMovementNormalized(float nx, float ny, bool constrainPitch)
 {
-    // ²ÎÊıÉè¼Æ£¨¿Éµ÷£©
-    // fullScreenYawDeg = µ±Êó±êÔÚÒ»Ö¡ÄÚÏàµ±ÓÚ¡°¿çÔ½Õû¸ö´°¿Ú¿í¡±Ê±¶ÔÓ¦µÄ½Ç¶È£¨¶È£©
-    // ÀıÈç£ºfullScreenYawDeg = 180 ±íÊ¾°ÑÊó±ê´Ó´°¿Ú×ó±ßÍÏµ½ÓÒ±ß¶ÔÓ¦ 180¡ã
-    const float fullScreenYawDeg = 180.0f; // ¿Éµ÷
-    const float fullScreenPitchDeg = 90.0f; // ÉÏÏÂÊÓ½Ç·¶Î§£¨ÏŞÖÆ·ù¶È£©
+    // å‚æ•°è®¾è®¡ï¼ˆå¯è°ƒï¼‰
+    // fullScreenYawDeg = å½“é¼ æ ‡åœ¨ä¸€å¸§å†…ç›¸å½“äºâ€œè·¨è¶Šæ•´ä¸ªçª—å£å®½â€æ—¶å¯¹åº”çš„è§’åº¦ï¼ˆåº¦ï¼‰
+    // ä¾‹å¦‚ï¼šfullScreenYawDeg = 180 è¡¨ç¤ºæŠŠé¼ æ ‡ä»çª—å£å·¦è¾¹æ‹–åˆ°å³è¾¹å¯¹åº” 180Â°
+    const float fullScreenYawDeg = 180.0f; // å¯è°ƒ
+    const float fullScreenPitchDeg = 90.0f; // ä¸Šä¸‹è§†è§’èŒƒå›´ï¼ˆé™åˆ¶å¹…åº¦ï¼‰
 
-    // sensitivity ÊÇÒ»¸öÏµÊı£¨0.0 ~ 1.0£©£¬¿ØÖÆÊÖ¸Ğ
-    // ÍÆ¼ö³õÊ¼Öµ£º0.8 ~ 1.0£¨ÒòÎªÎÒÃÇÒÑ¾­°´ÆÁÄ»¹éÒ»»¯£©
-    float sensitivity = this->MouseSensitivity; // Äã¿ÉÔÚÍâ²¿ÉèÖÃ£¬ÀıÈç 0.5~1.0
+    // sensitivity æ˜¯ä¸€ä¸ªç³»æ•°ï¼ˆ0.0 ~ 1.0ï¼‰ï¼Œæ§åˆ¶æ‰‹æ„Ÿ
+    // æ¨èåˆå§‹å€¼ï¼š0.8 ~ 1.0ï¼ˆå› ä¸ºæˆ‘ä»¬å·²ç»æŒ‰å±å¹•å½’ä¸€åŒ–ï¼‰
+    float sensitivity = this->MouseSensitivity; // ä½ å¯åœ¨å¤–éƒ¨è®¾ç½®ï¼Œä¾‹å¦‚ 0.5~1.0
 
-    // ¼ÆËãÕâÖ¡µÄ½Ç¶ÈÔöÁ¿£¨¶È£©
+    // è®¡ç®—è¿™å¸§çš„è§’åº¦å¢é‡ï¼ˆåº¦ï¼‰
     float dYawDeg = nx * fullScreenYawDeg * sensitivity;
     float dPitchDeg = ny * fullScreenPitchDeg * sensitivity;
 
-    // µ¥Ö¡½Ç¶È±£»¤£º×î´ó½Ç¶ÈÏŞÖÆ£¨deg£©
-    const float MAX_DEG_PER_FRAME = 3.5f; // ÍÆ¼ö 1.5 ~ 4.0£¬¸ù¾İ¸öÈËÊÖ¸Ğµ÷½Ú
+    // å•å¸§è§’åº¦ä¿æŠ¤ï¼šæœ€å¤§è§’åº¦é™åˆ¶ï¼ˆdegï¼‰
+    const float MAX_DEG_PER_FRAME = 3.5f; // æ¨è 1.5 ~ 4.0ï¼Œæ ¹æ®ä¸ªäººæ‰‹æ„Ÿè°ƒèŠ‚
     if (dYawDeg > MAX_DEG_PER_FRAME) dYawDeg = MAX_DEG_PER_FRAME;
     if (dYawDeg < -MAX_DEG_PER_FRAME) dYawDeg = -MAX_DEG_PER_FRAME;
     if (dPitchDeg > MAX_DEG_PER_FRAME) dPitchDeg = MAX_DEG_PER_FRAME;
     if (dPitchDeg < -MAX_DEG_PER_FRAME) dPitchDeg = -MAX_DEG_PER_FRAME;
 
-    // ¸üĞÂÄ¿±ê½Ç¶È£¨TargetYaw/TargetPitch£©
+    // æ›´æ–°ç›®æ ‡è§’åº¦ï¼ˆTargetYaw/TargetPitchï¼‰
     TargetYaw += dYawDeg;
     TargetPitch += dPitchDeg;
 
-    // ¸©ÑöÏŞÖÆ
+    // ä¿¯ä»°é™åˆ¶
     if (constrainPitch)
     {
         if (TargetPitch > 89.0f) TargetPitch = 89.0f;
