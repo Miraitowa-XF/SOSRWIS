@@ -10,7 +10,7 @@
 #include "stb_image.h"
 
 //必要参数：重力加速度，
-static const float GRAVITY = -1.6f;
+static const float GRAVITY = -0.8f;
 static float quad[] = {
 	//pos				//tex
 	-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -169,9 +169,9 @@ void ParticleSystem::SpawnParticle() {
 	);
 	//初始下落速度
 	p.velocity = glm::vec3(
-		wind.x + glm::linearRand(-0.3f, 0.3f),
+		wind.x + glm::linearRand(-0.2f, 0.2f),
 		glm::linearRand(-0.5f, -1.0f),
-		wind.z + glm::linearRand(-0.3f, 0.3f)
+		wind.z + glm::linearRand(-0.2f, 0.2f)
 	);
 
 	p.lifetime = glm::linearRand(8.0f, 18.0f);
@@ -186,7 +186,7 @@ void ParticleSystem::SpawnParticle() {
 	particles.push_back(p);
 }
 
-void ParticleSystem::Update(float deltaTime) {
+void ParticleSystem::Update(float deltaTime, bool smallSnow) {
 	if (!active) return;
 
 	spawnAccumulator += deltaTime * spawnRate;	//累加器
@@ -209,11 +209,12 @@ void ParticleSystem::Update(float deltaTime) {
 			//particles.erase(particles.begin() + i);
 		}
 		else {
-			float t = glfwGetTime();
-			p.position.x += sin(t * p.swaySpeed + p.phase) * 0.15f; // 0.15f为摆动幅度
-			p.position.z += cos(t * p.swaySpeed + p.phase) * 0.08f;
-			p.angle += p.angularSpeed * deltaTime;
-
+			if (!smallSnow) {
+				float t = glfwGetTime();
+				p.position.x += sin(t * p.swaySpeed + p.phase) * 0.06f; // 0.06f为摆动幅度
+				p.position.z += cos(t * p.swaySpeed + p.phase) * 0.03f;
+				p.angle += p.angularSpeed * deltaTime;
+			}
 		}
 	}
 }

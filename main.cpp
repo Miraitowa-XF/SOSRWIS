@@ -752,17 +752,29 @@ void processInput(GLFWwindow* window)
         f1Pressed = false;
     }
 
-    //下雪天气开关：O/P, L，O是下雪、P是停止下雪、L是下大雪，
+    //下雪天气开关：O/P, L，O是下中雪、P是停止下雪、L是下大雪，K是下小雪
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+        snowyScene.setSmallSnow(true);
+		double t = glfwGetTime();
+		if (t - lastToggleTimeF > toggleCooldown) {
+			snowyScene.GetParticleSystem().SetSpawnRate(400.0f); // 下小雪
+			snowyScene.GetParticleSystem().SetActive(true);
+			lastToggleTimeF = t;
+            printf("small snow: ON\n");
+        }
+    }
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        snowyScene.setSmallSnow(false);
         double t = glfwGetTime();
         if (t - lastToggleTimeF > toggleCooldown) {
-            snowyScene.GetParticleSystem().SetSpawnRate(800.0f); // 下大雪
+            snowyScene.GetParticleSystem().SetSpawnRate(800.0f); // 下中雪
             snowyScene.GetParticleSystem().SetActive(true);
             lastToggleTimeF = t;
-            printf("Snow: ON\n");
+            printf("mid Snow: ON\n");
         }
     }
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        snowyScene.setSmallSnow(false);
         double t = glfwGetTime();
         if (t - lastToggleTimeF > toggleCooldown) {
             snowyScene.GetParticleSystem().SetActive(false);
@@ -771,15 +783,15 @@ void processInput(GLFWwindow* window)
         }
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        snowyScene.setSmallSnow(false);
         double t = glfwGetTime();
         if (t - lastToggleTimeF > toggleCooldown) {
-            snowyScene.GetParticleSystem().SetSpawnRate(2400.0f); // 下大雪
+            snowyScene.GetParticleSystem().SetSpawnRate(1600.0f); // 下大雪
             snowyScene.GetParticleSystem().SetActive(true);
             lastToggleTimeF = t;
             printf("Heavy snow: ON\n");
         }
     }
-
     // 太阳系统
     // 控制太阳时间 (例如：按键盘左/右键)
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {

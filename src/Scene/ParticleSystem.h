@@ -55,7 +55,7 @@ struct SnowParticle {
 class ParticleSystem {
 public:
 	void Init(const char* vertPath, const char* fragPath, const char* texturePath);
-	void Update(float deltaTime);
+	void Update(float deltaTime, bool smallSnow);
 	void Render(const glm::mat4& view, const glm::mat4& proj);
 
 	void SetSpawnRate(float rate);
@@ -85,7 +85,6 @@ private:
 	GLint locView = -1;
 	GLint locProj = -1;
 	GLint locModel = -1;
-
 };
 
 

@@ -15,7 +15,7 @@ void SnowScene::Update(float deltaTime) {
 	//camera更新
 	//camera.Update(deltaTime);
 	//粒子更新
-	particleSystem.Update(deltaTime);
+	particleSystem.Update(deltaTime, smallSnow);
 }
 
 void SnowScene::Render(Camera camera) {
@@ -29,6 +29,10 @@ void SnowScene::Render(Camera camera) {
 	);
 	//渲染粒子系统
 	particleSystem.Render(view, projection);
+}
+
+void SnowScene::setSmallSnow(bool set) {
+	smallSnow = set;
 }
 
 ParticleSystem& SnowScene::GetParticleSystem() {
