@@ -29,8 +29,8 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // 模型阴影的边缘清晰度
-const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024; // 分辨率越高越清晰
-//const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // 高分辨率参数设置，但是对于集显设备可能会在运行过程中卡死
+//const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024; // 分辨率越高越清晰
+const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // 高分辨率参数设置，但是对于集显设备可能会在运行过程中卡死
 
 // 摄像机系统
 Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // 初始位置的确定
@@ -591,8 +591,12 @@ int main()
         ourShader.setMat4("model", model);
         groundModel.Draw(ourShader);
 
-        // 绘制天空盒（注意：Skybox::Draw 使用的是没有平移的 view）
-        skybox->Draw(view, projection);
+        // 但为了防止至暗时刻(强度为0)天空完全变成死黑，我们给一个最低亮度 0.05
+        float skyBrightness = std::max(sunSystem.intensity, 0.05f);
+        // 如果是白天，可以稍微降低一点亮度，防止天空过曝太白 (可选)
+        if (skyBrightness > 1.0f) skyBrightness = 1.0f;
+        // 调用 Draw，传入计算好的亮度
+        skybox->Draw(view, projection, skyBrightness);
 
         // 绘制空气墙
         if (showColliders) {

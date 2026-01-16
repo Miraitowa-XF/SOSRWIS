@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec3 TexCoords;
 
 uniform samplerCube skybox; 
+uniform float brightness; // 接收亮度变量
 
 void main()
 {
@@ -12,8 +13,11 @@ void main()
 
     // 2. 调整亮度系数 (0.0 ~ 1.0)
     // 0.5 表示亮度减半，0.2 表示很暗，1.0 是原图
-    float factor = 0.5; 
+    // float factor = 0.5; 
 
     // 3. 输出变暗后的颜色
-    FragColor = texColor * factor;
+    // FragColor = texColor * factor;
+
+    // 将纹理颜色乘以亮度系数
+    FragColor = texColor * vec4(brightness, brightness, brightness, 1.0);
 }

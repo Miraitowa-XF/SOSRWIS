@@ -68,7 +68,7 @@ Skybox::Skybox(std::vector<std::string> faces)
     skyboxShader->setInt("skybox", 0);
 }
 
-void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
+void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection, float brightness)
 {
     // 改变深度测试函数，让天空盒在最后绘制 (Optimization)
     glDepthFunc(GL_LEQUAL);
@@ -81,6 +81,9 @@ void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
 
     skyboxShader->setMat4("view", viewNoTrans);
     skyboxShader->setMat4("projection", projection);
+
+    // 传递亮度给 Shader
+    skyboxShader->setFloat("brightness", brightness);
 
     glBindVertexArray(skyboxVAO);
     glActiveTexture(GL_TEXTURE0);

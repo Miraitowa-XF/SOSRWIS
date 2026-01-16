@@ -15,7 +15,7 @@ public:
     Skybox(std::vector<std::string> faces);
 
     // 绘制函数
-    void Draw(const glm::mat4& view, const glm::mat4& projection);
+    void Draw(const glm::mat4& view, const glm::mat4& projection, float brightness = 1.0f);
 
 private:
     unsigned int skyboxVAO, skyboxVBO;
