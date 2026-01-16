@@ -1,30 +1,30 @@
-#version 330 core
-layout (location = 0) in vec3 aPos;      // ¶¥µãÎ»ÖÃ
-layout (location = 1) in vec3 aNormal;   // ·¨Ïß
-layout (location = 2) in vec2 aTexCoords;// ÎÆÀí×ø±ê
+ï»¿#version 330 core
+layout (location = 0) in vec3 aPos;      // é¡¶ç‚¹ä½ç½®
+layout (location = 1) in vec3 aNormal;   // æ³•çº¿
+layout (location = 2) in vec2 aTexCoords;// çº¹ç†åæ ‡
 
-out vec3 FragPos;   // Êä³öµ½Æ¬¶Î×ÅÉ«Æ÷£ºÊÀ½ç×ø±êÎ»ÖÃ
-out vec3 Normal;    // Êä³öµ½Æ¬¶Î×ÅÉ«Æ÷£º·¨Ïß
-out vec2 TexCoords; // Êä³öµ½Æ¬¶Î×ÅÉ«Æ÷£ºÎÆÀí×ø±ê
-out vec4 FragPosLightSpace; // Êä³ö¹â¿Õ¼ä×ø±ê
+out vec3 FragPos;   // è¾“å‡ºåˆ°ç‰‡æ®µç€è‰²å™¨ï¼šä¸–ç•Œåæ ‡ä½ç½®
+out vec3 Normal;    // è¾“å‡ºåˆ°ç‰‡æ®µç€è‰²å™¨ï¼šæ³•çº¿
+out vec2 TexCoords; // è¾“å‡ºåˆ°ç‰‡æ®µç€è‰²å™¨ï¼šçº¹ç†åæ ‡
+out vec4 FragPosLightSpace; // è¾“å‡ºå…‰ç©ºé—´åæ ‡
 
-uniform mat4 model;      // Ä£ĞÍ¾ØÕó
-uniform mat4 view;       // ¹Û²ì¾ØÕó
-uniform mat4 projection; // Í¶Ó°¾ØÕó
-uniform mat4 lightSpaceMatrix; // ½ÓÊÕ¹â¾ØÕó
+uniform mat4 model;      // æ¨¡å‹çŸ©é˜µ
+uniform mat4 view;       // è§‚å¯ŸçŸ©é˜µ
+uniform mat4 projection; // æŠ•å½±çŸ©é˜µ
+uniform mat4 lightSpaceMatrix; // æ¥æ”¶å…‰çŸ©é˜µ
 
 void main()
 {
-    // ¼ÆËã¶¥µãµÄÊÀ½ç×ø±ê
+    // è®¡ç®—é¡¶ç‚¹çš„ä¸–ç•Œåæ ‡
     FragPos = vec3(model * vec4(aPos, 1.0));
-    // ¼ÆËã·¨Ïß£¨´¦Àí·Ç¾ùÔÈËõ·Å£©
+    // è®¡ç®—æ³•çº¿ï¼ˆå¤„ç†éå‡åŒ€ç¼©æ”¾ï¼‰
     Normal = mat3(transpose(inverse(model))) * aNormal;  
-    // ´«µİÎÆÀí×ø±ê
+    // ä¼ é€’çº¹ç†åæ ‡
     TexCoords = aTexCoords;
 
-    // ¡¾ĞÂÔö¡¿¼ÆËãµ±Ç°¶¥µãÔÚ¹â¿Õ¼äµÄÎ»ÖÃ
+    // ã€æ–°å¢ã€‘è®¡ç®—å½“å‰é¡¶ç‚¹åœ¨å…‰ç©ºé—´çš„ä½ç½®
     FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     
-    // ×îÖÕµÄ²Ã¼ô¿Õ¼ä×ø±ê
+    // æœ€ç»ˆçš„è£å‰ªç©ºé—´åæ ‡
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }

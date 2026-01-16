@@ -1,6 +1,6 @@
-#pragma once
+ï»¿#pragma once
 
-#include <glad/glad.h> // °üº¬ glad À´»ñÈ¡ËùÓĞµÄ OpenGL Í·ÎÄ¼ş
+#include <glad/glad.h> // åŒ…å« glad æ¥è·å–æ‰€æœ‰çš„ OpenGL å¤´æ–‡ä»¶
 #include <glm/glm.hpp>
 
 #include <string>
@@ -11,15 +11,15 @@
 class Shader
 {
 public:
-    unsigned int ID; // ×ÅÉ«Æ÷³ÌĞò ID
+    unsigned int ID; // ç€è‰²å™¨ç¨‹åº ID
 
-    // ¹¹Ôìº¯Êı£º´«Èë¶¥µãºÍÆ¬¶Î×ÅÉ«Æ÷µÄÂ·¾¶
+    // æ„é€ å‡½æ•°ï¼šä¼ å…¥é¡¶ç‚¹å’Œç‰‡æ®µç€è‰²å™¨çš„è·¯å¾„
     Shader(const char* vertexPath, const char* fragmentPath);
 
-    // ¼¤»î×ÅÉ«Æ÷
+    // æ¿€æ´»ç€è‰²å™¨
     void use();
 
-    // uniform ¹¤¾ßº¯Êı (ºóĞø´«²ÎÓÃ)
+    // uniform å·¥å…·å‡½æ•° (åç»­ä¼ å‚ç”¨)
     void setBool(const std::string& name, bool value) const;
     void setInt(const std::string& name, int value) const;
     void setFloat(const std::string& name, float value) const;
@@ -27,6 +27,6 @@ public:
     void setVec3(const std::string& name, const glm::vec3& value) const;
 
 private:
-    // ¼ì²é±àÒë´íÎóµÄ¸¨Öúº¯Êı
+    // æ£€æŸ¥ç¼–è¯‘é”™è¯¯çš„è¾…åŠ©å‡½æ•°
     void checkCompileErrors(unsigned int shader, std::string type);
 };

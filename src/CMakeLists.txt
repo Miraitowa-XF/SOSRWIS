@@ -1,30 +1,30 @@
-# ÊÕ¼¯±¾Ä¿Â¼ÏÂËùÓĞµÄ .cpp ºÍ .c ÎÄ¼ş
+ï»¿# æ”¶é›†æœ¬ç›®å½•ä¸‹æ‰€æœ‰çš„ .cpp å’Œ .c æ–‡ä»¶
 file(GLOB_RECURSE SOURCES "*.cpp" "*.c")
 
-# ´´½¨ CoreLib ¾²Ì¬¿â
+# åˆ›å»º CoreLib é™æ€åº“
 add_library(CoreLib ${SOURCES} )
 
-# ¡¾¹Ø¼üµã¡¿
-# CoreLib ÀïµÄ´úÂë¿ÉÄÜ»áÓÃµ½ glad.h »ò glfw3.h
-# ËùÒÔÎÒÃÇĞèÒªÈÃ CoreLib Ò²ÄÜÕÒµ½ÕâĞ©Í·ÎÄ¼ş
-# Á´½Ó glad ¿â»á×Ô¶¯°Ñ glad/include Â·¾¶´ø¹ıÀ´
+# ã€å…³é”®ç‚¹ã€‘
+# CoreLib é‡Œçš„ä»£ç å¯èƒ½ä¼šç”¨åˆ° glad.h æˆ– glfw3.h
+# æ‰€ä»¥æˆ‘ä»¬éœ€è¦è®© CoreLib ä¹Ÿèƒ½æ‰¾åˆ°è¿™äº›å¤´æ–‡ä»¶
+# é“¾æ¥ glad åº“ä¼šè‡ªåŠ¨æŠŠ glad/include è·¯å¾„å¸¦è¿‡æ¥
 target_link_libraries(CoreLib 
     PUBLIC 
     glad 
-    imgui # Èç¹û CoreLib ·â×°ÁË UI ´úÂë
+    imgui # å¦‚æœ CoreLib å°è£…äº† UI ä»£ç 
 )
 
 
 
-# ÊÖ¶¯Ìí¼Ó GLFW µÄ include Â·¾¶ (Èç¹û src ÀïµÄ´úÂëÓÃµ½ÁË GLFW)
-# ÏÔÊ½°üº¬ Header-Only ¿âµÄÂ·¾¶
+# æ‰‹åŠ¨æ·»åŠ  GLFW çš„ include è·¯å¾„ (å¦‚æœ src é‡Œçš„ä»£ç ç”¨åˆ°äº† GLFW)
+# æ˜¾å¼åŒ…å« Header-Only åº“çš„è·¯å¾„
 target_include_directories(CoreLib PUBLIC 
-    "${CMAKE_SOURCE_DIR}/third_party/glm"           # ÈÃ CoreLib ÄÜÓÃ GLM
-    "${CMAKE_SOURCE_DIR}/third_party/stb_image/include" # ÈÃ CoreLib ÄÜÓÃ stb_image
-    "${CMAKE_SOURCE_DIR}/third_party/assimp/include"    # ÈÃ CoreLib ÄÜÓÃ Assimp
+    "${CMAKE_SOURCE_DIR}/third_party/glm"           # è®© CoreLib èƒ½ç”¨ GLM
+    "${CMAKE_SOURCE_DIR}/third_party/stb_image/include" # è®© CoreLib èƒ½ç”¨ stb_image
+    "${CMAKE_SOURCE_DIR}/third_party/assimp/include"    # è®© CoreLib èƒ½ç”¨ Assimp
     "${CMAKE_SOURCE_DIR}/third_party/glfw/include"
 )
 
-# ±©Â¶ CoreLib ×Ô¼ºµÄÂ·¾¶£¬ÕâÑù main.cpp ÒıÓÃ src ÀïµÄÍ·ÎÄ¼şÊ±£¬
-# ¿ÉÒÔÖ±½Ó #include "example.h" ¶ø²»ÓÃĞ´ #include "src/example.h"
+# æš´éœ² CoreLib è‡ªå·±çš„è·¯å¾„ï¼Œè¿™æ · main.cpp å¼•ç”¨ src é‡Œçš„å¤´æ–‡ä»¶æ—¶ï¼Œ
+# å¯ä»¥ç›´æ¥ #include "example.h" è€Œä¸ç”¨å†™ #include "src/example.h"
 target_include_directories(CoreLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

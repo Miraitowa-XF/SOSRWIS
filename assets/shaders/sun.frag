@@ -1,4 +1,4 @@
-#version 330 core
+ï»¿#version 330 core
 out vec4 FragColor;
 
 in vec3 FragPos;
@@ -13,14 +13,14 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 norm = normalize(Normal);
 
-    // ¼ÆËãÖĞĞÄ·¢¹â¸Ğ
+    // è®¡ç®—ä¸­å¿ƒå‘å…‰æ„Ÿ
     float centerFactor = max(dot(norm, viewDir), 0.0);
     float glow = pow(centerFactor, 4.0); 
     
-    // ÑÕÉ«»ìºÏ£ºÖĞĞÄÁÁ°×É«£¬±ßÔµÑÕÉ«
+    // é¢œè‰²æ··åˆï¼šä¸­å¿ƒäº®ç™½è‰²ï¼Œè¾¹ç¼˜é¢œè‰²
     vec3 finalColor = mix(sunColor, vec3(1.1, 1.1, 1.0), glow);
 
-    // ×îºóµÄÁÁ¶ÈÔöÒæ
+    // æœ€åçš„äº®åº¦å¢ç›Š
     finalColor *= sunIntensity;
 
     FragColor = vec4(finalColor, 1.0);

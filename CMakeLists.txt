@@ -1,4 +1,4 @@
-# 需求的最低cmake程序版本
+﻿# 需求的最低cmake程序版本
 cmake_minimum_required(VERSION 3.12)
 
 # 本工程的名字
@@ -6,6 +6,8 @@ project(SOSRWIS)
 
 # 本工程支持的C++版本
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  # 强制要求，不支持就报错
+set(CMAKE_CXX_EXTENSIONS OFF)        # 只使用标准 C++，不使用编译器扩展
 
 # ==========================================
 # 1. 配置第三方库 (Third Party Setup)

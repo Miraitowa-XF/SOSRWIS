@@ -1,30 +1,44 @@
-#include "Shader.h"
+ï»¿#include "Shader.h"
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
-    // 1. ´ÓÎÄ¼şÂ·¾¶ÖĞ»ñÈ¡¶¥µã/Æ¬¶Î×ÅÉ«Æ÷
+    // 1. ä»æ–‡ä»¶è·¯å¾„ä¸­è·å–é¡¶ç‚¹/ç‰‡æ®µç€è‰²å™¨
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
 
-    // ±£Ö¤ ifstream ¶ÔÏó¿ÉÒÔÅ×³öÒì³£
+    // ä¿è¯ ifstream å¯¹è±¡å¯ä»¥æŠ›å‡ºå¼‚å¸¸
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     try
     {
-        // ´ò¿ªÎÄ¼ş
-        vShaderFile.open(vertexPath);
-        fShaderFile.open(fragmentPath);
+        // æ‰“å¼€æ–‡ä»¶
+        vShaderFile.open(vertexPath, std::ios::binary); // ã€å…³é”®ã€‘äºŒè¿›åˆ¶æ¨¡å¼
+        fShaderFile.open(fragmentPath, std::ios::binary);
+
+        // --- ã€æ’å…¥ã€‘è·³è¿‡ Vertex Shader çš„ BOM ---
+        unsigned char bom[3] = { 0 };
+        vShaderFile.read(reinterpret_cast<char*>(bom), 3);
+        if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+            vShaderFile.seekg(0); // ä¸æ˜¯BOMï¼Œå€’å¸¦å›å¼€å¤´
+        }
+
+        // --- ã€æ’å…¥ã€‘è·³è¿‡ Fragment Shader çš„ BOM ---
+        fShaderFile.read(reinterpret_cast<char*>(bom), 3);
+        if (!(bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+            fShaderFile.seekg(0); // ä¸æ˜¯BOMï¼Œå€’å¸¦å›å¼€å¤´
+        }
+
         std::stringstream vShaderStream, fShaderStream;
-        // ¶ÁÈ¡ÎÄ¼şµÄ»º³åÄÚÈİµ½Êı¾İÁ÷ÖĞ
+        // è¯»å–æ–‡ä»¶çš„ç¼“å†²å†…å®¹åˆ°æ•°æ®æµä¸­
         vShaderStream << vShaderFile.rdbuf();
         fShaderStream << fShaderFile.rdbuf();
-        // ¹Ø±ÕÎÄ¼ş´¦ÀíÆ÷
+        // å…³é—­æ–‡ä»¶å¤„ç†å™¨
         vShaderFile.close();
         fShaderFile.close();
-        // ×ª»»Êı¾İÁ÷µ½ string
+        // è½¬æ¢æ•°æ®æµåˆ° string
         vertexCode = vShaderStream.str();
         fragmentCode = fShaderStream.str();
     }
@@ -37,29 +51,29 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     const char* vShaderCode = vertexCode.c_str();
     const char* fShaderCode = fragmentCode.c_str();
 
-    // 2. ±àÒë×ÅÉ«Æ÷
+    // 2. ç¼–è¯‘ç€è‰²å™¨
     unsigned int vertex, fragment;
 
-    // ¶¥µã×ÅÉ«Æ÷
+    // é¡¶ç‚¹ç€è‰²å™¨
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
     checkCompileErrors(vertex, "VERTEX");
 
-    // Æ¬¶Î×ÅÉ«Æ÷
+    // ç‰‡æ®µç€è‰²å™¨
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
     glCompileShader(fragment);
     checkCompileErrors(fragment, "FRAGMENT");
 
-    // ×ÅÉ«Æ÷³ÌĞò (Linking)
+    // ç€è‰²å™¨ç¨‹åº (Linking)
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
     glAttachShader(ID, fragment);
     glLinkProgram(ID);
     checkCompileErrors(ID, "PROGRAM");
 
-    // É¾³ı×ÅÉ«Æ÷£¬ÒòÎªËüÃÇÒÑ¾­Á´½Óµ½ÎÒÃÇµÄ³ÌĞòÖĞÁË£¬²»ÔÙĞèÒªÁË
+    // åˆ é™¤ç€è‰²å™¨ï¼Œå› ä¸ºå®ƒä»¬å·²ç»é“¾æ¥åˆ°æˆ‘ä»¬çš„ç¨‹åºä¸­äº†ï¼Œä¸å†éœ€è¦äº†
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }

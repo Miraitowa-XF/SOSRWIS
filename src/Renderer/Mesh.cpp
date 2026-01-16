@@ -1,4 +1,4 @@
-#include "Mesh.h"
+ï»¿#include "Mesh.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
 {
@@ -11,29 +11,29 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 
 void Mesh::setupMesh()
 {
-    // Éú³É»º³å¶ÔÏó
+    // ç”Ÿæˆç¼“å†²å¯¹è±¡
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
-    // ¼ÓÔØÊı¾İµ½ VBO
+    // åŠ è½½æ•°æ®åˆ° VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-    // ¼ÓÔØÊı¾İµ½ EBO
+    // åŠ è½½æ•°æ®åˆ° EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-    // ÉèÖÃ¶¥µãÊôĞÔÖ¸Õë
-    // 1. Î»ÖÃ
+    // è®¾ç½®é¡¶ç‚¹å±æ€§æŒ‡é’ˆ
+    // 1. ä½ç½®
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    // 2. ·¨Ïß
+    // 2. æ³•çº¿
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-    // 3. ÎÆÀí×ø±ê
+    // 3. çº¹ç†åæ ‡
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
@@ -42,15 +42,15 @@ void Mesh::setupMesh()
 
 void Mesh::Draw(Shader& shader)
 {
-    // °ó¶¨ÎÆÀí
+    // ç»‘å®šçº¹ç†
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
 
     for (unsigned int i = 0; i < textures.size(); i++)
     {
-        glActiveTexture(GL_TEXTURE0 + i); // ÔÚ°ó¶¨Ö®Ç°¼¤»îÏàÓ¦µÄÎÆÀíµ¥Ôª
+        glActiveTexture(GL_TEXTURE0 + i); // åœ¨ç»‘å®šä¹‹å‰æ¿€æ´»ç›¸åº”çš„çº¹ç†å•å…ƒ
 
-        // »ñÈ¡ÎÆÀíĞòºÅ (diffuse_textureN)
+        // è·å–çº¹ç†åºå· (diffuse_textureN)
         std::string number;
         std::string name = textures[i].type;
         if (name == "texture_diffuse")
@@ -58,23 +58,23 @@ void Mesh::Draw(Shader& shader)
         else if (name == "texture_specular")
             number = std::to_string(specularNr++); // transfer unsigned int to stream
         else if (name == "texture_emissive")
-            number = std::to_string(1); // ÎÒÃÇÍ¨³£Ö»ĞèÒªÒ»ÕÅ×Ô·¢¹âÍ¼
+            number = std::to_string(1); // æˆ‘ä»¬é€šå¸¸åªéœ€è¦ä¸€å¼ è‡ªå‘å…‰å›¾
 
-        // Éè¶¨ shader ÖĞµÄ uniform ±äÁ¿ (Èç: material.texture_diffuse1)
-        // ¼ÙÉèÄãµÄ shader ÀïÎÆÀí½Ğ diffuseTexture£¬ÕâÀï¿ÉÄÜĞèÒª¸ù¾İ shader µ÷Õû
-        // ¼òµ¥Æğ¼û£¬Èç¹ûÖ»ÓĞÒ»¸öÎÆÀí£¬Í¨³£Ö±½Ó´« diffuseTexture
+        // è®¾å®š shader ä¸­çš„ uniform å˜é‡ (å¦‚: material.texture_diffuse1)
+        // å‡è®¾ä½ çš„ shader é‡Œçº¹ç†å« diffuseTextureï¼Œè¿™é‡Œå¯èƒ½éœ€è¦æ ¹æ® shader è°ƒæ•´
+        // ç®€å•èµ·è§ï¼Œå¦‚æœåªæœ‰ä¸€ä¸ªçº¹ç†ï¼Œé€šå¸¸ç›´æ¥ä¼  diffuseTexture
         shader.setInt((name + number).c_str(), i);
-        // »òÕßÈç¹ûÄãµÄ shader Ğ´ËÀ½Ğ diffuseTexture£¬¿ÉÒÔÓÃ£º
+        // æˆ–è€…å¦‚æœä½ çš„ shader å†™æ­»å« diffuseTextureï¼Œå¯ä»¥ç”¨ï¼š
         // if(name == "texture_diffuse") shader.setInt("diffuseTexture", i);
 
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
-    // »æÖÆÍø¸ñ
+    // ç»˜åˆ¶ç½‘æ ¼
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
-    // »Ö¸´Ä¬ÈÏ
+    // æ¢å¤é»˜è®¤
     glActiveTexture(GL_TEXTURE0);
 }

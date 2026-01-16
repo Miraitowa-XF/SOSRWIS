@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,7 +28,11 @@ unsigned int snowTexture;
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
-// 【保留】摄像机系统
+// 模型阴影的边缘清晰度
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024; // 分辨率越高越清晰
+//const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // 高分辨率参数设置，但是对于集显设备可能会在运行过程中卡死
+
+// 摄像机系统
 Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));     // 初始位置的确定
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -41,10 +45,15 @@ bool lKeyPressed = false; // 按键防抖
 // 增加一个防抖动变量
 bool tabPressed = false;
 
+// 鼠标锁定状态 (默认是锁定的)
+bool isCursorLocked = true;
+//按键防抖
+bool altPressed = false;
+
 bool showColliders = false; // 是否显示空气墙
 unsigned int debugCubeVAO = 0, debugCubeVBO = 0;
 
-// 【新增】定义一个结构体，用来管理场景里的每一个物体
+// 定义一个结构体，用来管理场景里的每一个物体
 struct SceneObject {
     Model* model;       // 模型指针
     glm::vec3 position; // 位置
@@ -57,10 +66,10 @@ struct SceneObject {
     }
 };
 
-// 【新增】存储所有场景对象的列表
+// 存储所有场景对象的列表
 std::vector<SceneObject> allObjects;
 
-// 【新增】存储所有障碍物的碰撞盒列表
+// 存储所有障碍物的碰撞盒列表
 std::vector<AABB> sceneColliders;
 
 //下雪场景必要全局变量
@@ -79,7 +88,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-// 【新增】手动添加一个障碍物 (空气墙)
+// 手动添加一个障碍物 (空气墙)
 // center: 盒子的中心坐标
 // size: 盒子的长宽高 (例如: vec3(10.0f, 5.0f, 1.0f) 代表一面 10米宽、1米厚的墙)
 void addInvisibleWall(glm::vec3 center, glm::vec3 size) {
@@ -193,11 +202,11 @@ int main()
     }
 
     glEnable(GL_DEPTH_TEST);
-    // 【新增】开启混合 (解决玻璃透明)
+    // 开启混合 (解决玻璃透明)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // 【新增】开启面剔除 (解决动漫模型黑色乱码)
+    // 开启面剔除 (解决动漫模型黑色乱码)
     glEnable(GL_CULL_FACE);
 
     // 启用多重采样
@@ -225,12 +234,12 @@ int main()
     stbi_set_flip_vertically_on_load(false);
 
     std::cout << "Loading Model..." << std::endl;
-    // 请确保 assets/models/house/house.obj 存在，否则程序会报错
+    // 请确保 assets/models/***/***.gltf 存在，否则程序会报错, 如果加载失败也会在控制台输出
     Model houseModel("assets/models/snowy_wooden_hut/scene.gltf");
     Model groundModel("assets/models/snow_floor/scene.gltf");
     Model snowmanModel("assets/models/snow_man/scene.gltf");
     Model house2Model("assets/models/lowpoly_snow_house/scene.gltf");
-    Model treesModel("assets/models/newtrees/newtrees.gltf");
+    Model treesModel("assets/models/newtrees/scene.gltf");
     Model wellModel("assets/models/old_well/scene.gltf");
     Model containerModel("assets/models/rusty_container/scene.gltf");
     Model busModel("assets/models/bus/scene.gltf");
@@ -296,16 +305,63 @@ int main()
     allObjects.push_back(SceneObject(&busModel, glm::vec3(-35.0f, 4.0f, 20.0f), glm::vec3(4.0f), 180.0f, glm::vec3(0, 1, 0)));
     // 喷泉旁边的路灯
     allObjects.push_back(SceneObject(&lampModel, glm::vec3(-8.0f, 0.0f, -12.0f), glm::vec3(2.0f), 45.0f, glm::vec3(0, 1, 0)));
-    // 3. 【新】长椅路灯
+    // 3. 长椅路灯
     allObjects.push_back(SceneObject(&lampModel, glm::vec3(22.0f, 0.0f, 10.0f), glm::vec3(2.0f), -45.0f, glm::vec3(0, 1, 0)));
-    // 4. 【新】村庄路灯
+    // 4. 村庄路灯
     allObjects.push_back(SceneObject(&lampModel, glm::vec3(6.0f, 0.0f, -40.0f), glm::vec3(2.0f), 135.0f, glm::vec3(0, 1, 0)));
 
     // (大工程)手动定义不可通行的区域
     // 你需要利用之前写的“打印坐标”功能，走到墙边，记下坐标，然后在这里写代码
-    // 例如：给房子后面加一堵空气墙
-    // 参数：中心点(0, 2, -45)， 尺寸(宽20，高5，厚2)
-    addInvisibleWall(glm::vec3(0.0f, 2.0f, -5.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+    // 例如：在广场中心加一堵空气墙
+    // 参数：中心点(0, 2, -45)， 尺寸(宽10，高10，厚10)
+    
+    // 空气墙
+    addInvisibleWall(glm::vec3(0.0f, 3.0f, -40.0f), glm::vec3(6.0f, 8.0f, 6.0f)); // 龙旁边的房子
+    addInvisibleWall(glm::vec3(0.0f, 0.5f, 19.0f), glm::vec3(23.0f, 15.0f, 15.0f)); // 树旁边的房子
+    addInvisibleWall(glm::vec3(-27.0f, 7.0f, -6.5f), glm::vec3(10.0f, 14.0f, 13.0f)); // 三栋中靠车的房子
+    addInvisibleWall(glm::vec3(-25.0f, 7.0f, -19.5f), glm::vec3(11.0f, 14.0f, 10.5f)); // 三栋中居中的房子
+    addInvisibleWall(glm::vec3(-25.0f, 7.0f, -30.8f), glm::vec3(10.5f, 18.0f, 10.0f)); // 三栋中靠龙的房子
+    addInvisibleWall(glm::vec3(-25.0f, 3.0f, 20.0f), glm::vec3(8.0f, 8.0f, 17.0f)); // 集装箱
+    addInvisibleWall(glm::vec3(-35.0f, 4.0f, 20.5f), glm::vec3(7.0f, 8.0f, 18.0f)); // 巴士
+    // 喷泉的空气墙绘制
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(7.0f, 7.0f, 7.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(8.0f, 7.0f, 6.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(6.0f, 7.0f, 8.0f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(9.0f, 7.0f, 4.8f));
+    addInvisibleWall(glm::vec3(-0.4f, 2.0f, -15.8f), glm::vec3(4.8f, 7.0f, 9.0f));
+    // 雕像空气墙绘制
+    addInvisibleWall(glm::vec3(-0.0f, 2.0f, -25.0f), glm::vec3(1.0f, 7.0f, 1.0f));
+    // 路灯空气墙绘制
+    addInvisibleWall(glm::vec3(-8.0f, 2.0f, -12.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(22.0f, 2.0f, 10.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(6.0f, 2.0f, -40.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    addInvisibleWall(glm::vec3(-17.0f, 2.0f, 15.0f), glm::vec3(0.5f, 7.0f, 0.5f));
+    // 圣诞树空气墙绘制
+    addInvisibleWall(glm::vec3(18.0f, 2.0f, -8.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(25.0f, 2.0f, -15.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(35.0f, 2.0f, -5.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(33.0f, 2.0f, -23.5f), glm::vec3(5.5f, 10.0f, 5.5f));
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -25.0f), glm::vec3(5.5f, 10.0f, 5.5f));
+    // 松树空气墙
+    addInvisibleWall(glm::vec3(25.0f, 2.0f, 25.0f), glm::vec3(5.5f, 20.0f, 5.5f));
+    // 雪人空气墙
+    addInvisibleWall(glm::vec3(-5.0f, 1.0f, -35.0f), glm::vec3(1.2f, 2.0f, 1.2f));
+    // 楼栋前的雪人空气墙
+    addInvisibleWall(glm::vec3(-17.0f, 2.0f, -14.0f), glm::vec3(1.5f, 4.0f, 1.5f));
+    // 邮箱空气墙
+    addInvisibleWall(glm::vec3(5.0f, 1.0f, -35.0f), glm::vec3(0.5f, 2.0f, 0.5f));
+    // 桌子空气墙
+    addInvisibleWall(glm::vec3(18.0f, 0.0f, 10.0f), glm::vec3(4.0f, 2.0f, 3.0f));
+    // 水井空气墙
+    addInvisibleWall(glm::vec3(34.7f, 1.0f, 15.0f), glm::vec3(1.5f, 2.0f, 1.5f));
+    // 圣诞树旁边人物 
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -14.0f), glm::vec3(3.0f, 4.0f, 1.5f));
+    addInvisibleWall(glm::vec3(15.0f, 2.0f, -17.0f), glm::vec3(0.5f, 4.0f, 0.8f));
+    addInvisibleWall(glm::vec3(15.0f, 1.0f, -19.0f), glm::vec3(0.7f, 2.0f, 0.3f));
+    // 勇士
+    addInvisibleWall(glm::vec3(10.0f, 2.0f, -30.0f), glm::vec3(1.2f, 6.0f, 0.5f));
+    
+
 
     // 初始化下雪场景
     initSnowyScene();
@@ -315,9 +371,8 @@ int main()
 
     // 4. 渲染循环
     // ==========================================
-    // 【新增】配置阴影贴图 FBO
+    // 配置阴影贴图 FBO
     // ==========================================
-    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096; // 分辨率越高越清晰
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
 
@@ -359,7 +414,7 @@ int main()
         lastFrame = currentFrame;
 
         // ==========================================
-        // 【新增】碰撞检测回退逻辑
+        // 碰撞检测回退逻辑
         // ==========================================
         glm::vec3 oldPosition = camera.Position; // 1. 备份位置
 
@@ -592,6 +647,30 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    // 鼠标锁定/解锁切换 (Left Alt)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS && !altPressed)
+    {
+        isCursorLocked = !isCursorLocked; // 切换状态
+        altPressed = true;
+
+        if (isCursorLocked) {
+            // 锁定鼠标：隐藏光标，无限移动 (FPS模式)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            // 重置 firstMouse，防止切回来时视角乱跳
+            firstMouse = true;
+            std::cout << "Mouse: LOCKED (Camera Control)" << std::endl;
+        }
+        else {
+            // 解放鼠标：显示光标，可以移出窗口
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            std::cout << "Mouse: UNLOCKED (UI Mode)" << std::endl;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
+    {
+        altPressed = false;
+    }
+
     // 2. TAB 切换摄像机模式 (FPS <-> God Mode)
     if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && !tabPressed)
     {
@@ -714,7 +793,7 @@ void processInput(GLFWwindow* window)
         }
     }
     // 太阳系统
-    // 【新增】控制太阳时间 (例如：按键盘左/右键)
+    // 控制太阳时间 (例如：按键盘左/右键)
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         dayTime += 0.1f * deltaTime; // 时间前进
         if (dayTime > 1.0f) dayTime = 0.0f;
@@ -758,7 +837,7 @@ void processInput(GLFWwindow* window)
         fflush(stdout); // 强制刷新缓冲区，确保实时显示
     }
 
-    // 【新增】按 'G' 键切换路灯
+    // 按 'G' 键切换路灯
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !lKeyPressed)
     {
         isLampOn = !isLampOn;
@@ -774,6 +853,9 @@ void processInput(GLFWwindow* window)
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+    // 如果鼠标是解锁状态，直接返回，不计算视角旋转
+    if (!isCursorLocked) return;
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 

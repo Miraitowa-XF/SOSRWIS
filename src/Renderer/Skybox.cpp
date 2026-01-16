@@ -1,11 +1,11 @@
-#include "Skybox.h"
+ï»¿#include "Skybox.h"
 
 Skybox::Skybox(std::vector<std::string> faces)
 {
-    // 1. ³õÊ¼»¯ Shader (È·±£ÄãÓĞÕâÁ½¸öÎÄ¼ş)
+    // 1. åˆå§‹åŒ– Shader (ç¡®ä¿ä½ æœ‰è¿™ä¸¤ä¸ªæ–‡ä»¶)
     skyboxShader = new Shader("assets/shaders/skybox.vert", "assets/shaders/skybox.frag");
 
-    // 2. Ìì¿ÕºĞµÄ¶¥µã (¾ÍÊÇÒ»¸ö¼òµ¥µÄÁ¢·½Ìå)
+    // 2. å¤©ç©ºç›’çš„é¡¶ç‚¹ (å°±æ˜¯ä¸€ä¸ªç®€å•çš„ç«‹æ–¹ä½“)
     float skyboxVertices[] = {
         // positions          
         -1.0f,  1.0f, -1.0f,
@@ -51,7 +51,7 @@ Skybox::Skybox(std::vector<std::string> faces)
          1.0f, -1.0f,  1.0f
     };
 
-    // 3. ÅäÖÃ VAO/VBO
+    // 3. é…ç½® VAO/VBO
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
     glBindVertexArray(skyboxVAO);
@@ -60,23 +60,23 @@ Skybox::Skybox(std::vector<std::string> faces)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-    // 4. ¼ÓÔØÎÆÀí
+    // 4. åŠ è½½çº¹ç†
     textureID = loadCubemap(faces);
 
-    // 5. ÉèÖÃ Shader µÄÎÆÀíµ¥Ôª (skybox ¶ÔÓ¦ unit 0)
+    // 5. è®¾ç½® Shader çš„çº¹ç†å•å…ƒ (skybox å¯¹åº” unit 0)
     skyboxShader->use();
     skyboxShader->setInt("skybox", 0);
 }
 
 void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
 {
-    // ¸Ä±äÉî¶È²âÊÔº¯Êı£¬ÈÃÌì¿ÕºĞÔÚ×îºó»æÖÆ (Optimization)
+    // æ”¹å˜æ·±åº¦æµ‹è¯•å‡½æ•°ï¼Œè®©å¤©ç©ºç›’åœ¨æœ€åç»˜åˆ¶ (Optimization)
     glDepthFunc(GL_LEQUAL);
-    glDisable(GL_CULL_FACE); // ÔİÊ±¹Ø±Õ£¬ÎªÁË»­Ìì¿Õ
+    glDisable(GL_CULL_FACE); // æš‚æ—¶å…³é—­ï¼Œä¸ºäº†ç”»å¤©ç©º
 
     skyboxShader->use();
 
-    // ÒÆ³ı view ¾ØÕóµÄÎ»ÒÆ²¿·Ö (Ö»±£ÁôĞı×ª)
+    // ç§»é™¤ view çŸ©é˜µçš„ä½ç§»éƒ¨åˆ† (åªä¿ç•™æ—‹è½¬)
     glm::mat4 viewNoTrans = glm::mat4(glm::mat3(view));
 
     skyboxShader->setMat4("view", viewNoTrans);
@@ -88,10 +88,10 @@ void Skybox::Draw(const glm::mat4& view, const glm::mat4& projection)
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
-    // »Ö¸´Ä¬ÈÏÉî¶È²âÊÔº¯Êı
+    // æ¢å¤é»˜è®¤æ·±åº¦æµ‹è¯•å‡½æ•°
     glDepthFunc(GL_LESS);
 
-    // ¡¾¹Ø¼üĞŞ¸´¡¿»­ÍêÌì¿ÕºĞºó£¬±ØĞëÁ¢¿Ì°ÑÌŞ³ı¿ª»ØÀ´£¡£¡
+    // ã€å…³é”®ä¿®å¤ã€‘ç”»å®Œå¤©ç©ºç›’åï¼Œå¿…é¡»ç«‹åˆ»æŠŠå‰”é™¤å¼€å›æ¥ï¼ï¼
     glEnable(GL_CULL_FACE);
 }
 
@@ -104,7 +104,7 @@ unsigned int Skybox::loadCubemap(std::vector<std::string> faces)
     int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++)
     {
-        // ÕâÀïµÄÂ·¾¶ĞèÒª×¢Òâ£¬È·±£ faces ÀïµÄÂ·¾¶ÊÇÕıÈ·µÄ
+        // è¿™é‡Œçš„è·¯å¾„éœ€è¦æ³¨æ„ï¼Œç¡®ä¿ faces é‡Œçš„è·¯å¾„æ˜¯æ­£ç¡®çš„
         unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data)
         {
@@ -120,7 +120,7 @@ unsigned int Skybox::loadCubemap(std::vector<std::string> faces)
         }
     }
 
-    // ÉèÖÃ¹ıÂË·½Ê½ºÍ»·ÈÆ·½Ê½
+    // è®¾ç½®è¿‡æ»¤æ–¹å¼å’Œç¯ç»•æ–¹å¼
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
