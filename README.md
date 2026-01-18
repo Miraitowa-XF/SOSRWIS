@@ -1,4 +1,4 @@
-﻿# SOSRWIS - 户外雪景渲染与天气交互系统
+﻿﻿# SOSRWIS - 户外雪景渲染与天气交互系统
 **(Snowy Outdoor Scene Rendering & Weather Interaction System)**
 
 ![OpenGL](https://img.shields.io/badge/OpenGL-3.3-green.svg) ![Language](https://img.shields.io/badge/Language-C%2B%2B17-blue.svg) ![Build](https://img.shields.io/badge/Build-CMake-orange.svg)
@@ -27,13 +27,31 @@ SOSRWIS 是一个基于 **OpenGL 3.3 Core Profile** 开发的沉浸式户外场�
 
 **⚠️ 注意：** 本项目包含大量模型与静态库文件，使用了 Git LFS。请务必在克隆前安装并初始化 LFS。
 
+> GitHub 服务器上存储的实际上不是那个几百 MB 的 .lib 文件，而是一个只有几行字的**纯文本“指针文件”**（大约 1KB），里面记录了真实文件的下载地址和哈希值。
+>
+> * 注意：请勿直接下载 .ZIP 压缩包使用该项目，因为 GitHub 的打包机制**不支持**自动解析 LFS。它会把那个几行字的“文本指针”下载下来，改名为 .lib 塞进压缩包里。从而最终只能在 `SOSRWIS/third_party/lib` 目录下看到很多大小为 1KB 的 .lib 文件
+
 ```bash
 # 1. 初始化 LFS (仅需执行一次)
 git lfs install
 
 # 2. 克隆仓库
-git clone https://github.com/Miraitowa-XF/-_-SOSRWIS-.git
+git clone https://github.com/Miraitowa-XF/SOSRWIS.git
 ```
+
+⚠️ **一定要做：**克隆完成后请务必查看，上面个提到的目录底下是否包含完整的 .lib 文件，如果不完整请使用如下的方式手动强制拉取 LFS 文件：
+
+```bash
+# 进入你克隆下来的项目目录：
+cd SOSRWIS
+
+# 执行核心修复命令,手动强制拉取 LFS 文件：
+git lfs pull
+```
+
+通过上述步骤一般可以解决克隆项目不完整的问题。
+
+![确保lib库的完整性](README_Image/确保lib库的完整性.png)
 
 ### 2. 环境依赖
 
@@ -45,11 +63,37 @@ git clone https://github.com/Miraitowa-XF/-_-SOSRWIS-.git
 ### 3. 编译与构建
 
 #### 方式 A：使用 Visual Studio (推荐)
-1.  打开 Visual Studio 2022。
-2.  选择 **"打开本地文件夹" (Open a local folder)**。
-3.  选择克隆下来的项目根目录。
-4.  等待 Visual Studio 自动检测 `CMakeLists.txt` 并完成配置（输出窗口显示 `CMake generation finished`）。
-5.  在顶部工具栏的 **"启动项"** 下拉菜单中，可以看到生成的 `.exe` 目标。
+1. 打开 Visual Studio 2022。
+
+2. 选择 **"打开本地文件夹" (Open a local folder)**。
+
+3. 选择克隆下来的项目根目录。
+
+4.  ~~等待 Visual Studio 自动检测 `CMakeLists.txt` 并完成配置（输出窗口显示 `CMake generation finished`）。~~
+
+   因为本项目使用到嵌套 `CMakeLists.txt` 因此 VS 不会自动完成配置，请按照下述操作来进行配置：
+
+   * 克隆完成后会出现如下所示的提示框，请点击 “**启用和设置源目录**”：
+
+     ![配置CMake](README_Image/配置CMake.png)
+
+   * 找到根目录下的 `CMakeLists.txt` 文件，并打开，具体目录是 `SOSRWIS/CMakeLists.txt`：
+
+     <img src="README_Image/打开CMakeLists.txt.png" alt="打开CMakeLists.txt" style="zoom:67%;" />
+
+   * ⚠️ **若错过此步或者不小心点到“不启用”：**请执行如下的操作
+
+     * **手动配置CMake：**找到项目的根目录鼠标右键找到“**CMake 工作区设置**”
+
+       ![手动打开CMake](README_Image/手动打开CMake.png)
+
+     * **启用CMake:**
+
+       ![启用CMake](README_Image/启用CMake.png)
+
+5. 在顶部工具栏的 **"启动项"** 下拉菜单中，可以看到生成的 `.exe` 目标。
+
+   <img src="README_Image/运行主程序.png" alt="运行主程序" style="zoom:80%;" />
 
 #### 方式 B：使用命令行
 ```bash
