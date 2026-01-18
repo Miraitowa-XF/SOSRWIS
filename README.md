@@ -39,7 +39,7 @@ git lfs install
 git clone https://github.com/Miraitowa-XF/SOSRWIS.git
 ```
 
-⚠️ **一定要做：**克隆完成后请务必查看，上面个提到的目录底下是否包含完整的 .lib 文件，如果不完整请使用如下的方式手动强制拉取 LFS 文件：
+⚠️ **一定要做**：克隆完成后请务必查看，上面个提到的目录底下是否包含完整的 .lib 文件，如果不完整请使用如下的方式手动强制拉取 LFS 文件：
 
 ```bash
 # 进入你克隆下来的项目目录：
@@ -81,9 +81,9 @@ git lfs pull
 
      <img src="README_Image/打开CMakeLists.txt.png" alt="打开CMakeLists.txt" style="zoom:67%;" />
 
-   * ⚠️ **若错过此步或者不小心点到“不启用”：**请执行如下的操作
+   * ⚠️ **若错过此步或者不小心点到“不启用”**：请执行如下的操作
 
-     * **手动配置CMake：**找到项目的根目录鼠标右键找到“**CMake 工作区设置**”
+     * **手动配置CMake**：找到项目的根目录鼠标右键找到“**CMake 工作区设置**”
 
        ![手动打开CMake](README_Image/手动打开CMake.png)
 
