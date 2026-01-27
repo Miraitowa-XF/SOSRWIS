@@ -5,6 +5,7 @@ out/
 build/
 bin/
 lib/
+.cache/
 # 注意：这里忽略根目录下的 lib/ 文件夹(如果有的话)，
 # 但不忽略 third_party 下的 lib (因为我们需要上传库文件)
 !third_party/**/lib/
